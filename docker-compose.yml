@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: inventory_app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./src:/var/www
+    ports:
+      - "8000:8000"
+    networks:
+      - inventory-net
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: inventory_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql-dbas-jkt-001.sumobase.my.id
+      PMA_PORT: 63306
+    ports:
+      - "8080:80"
+    networks:
+      - inventory-net
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: inventory_cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      # Token dari Cloudflare Zero Trust > Networks > Tunnels > Install connector.
+      # Simpan nilainya di file .env (di folder yang sama dengan compose ini).
+      - TUNNEL_TOKEN=eyJhIjoiMzllM2VhOWNjZjRlOGEzZWIyMzY3ODE1NmNmNmE3ZWUiLCJ0IjoiYWQyZDVjZDMtYjE1Zi00YzJmLWFjMWYtNzAxOWQwODE5M2NmIiwicyI6Ik5EUXhNalprTTJVdFlXSmpNUzAwTlRnekxXSTNZell0Wm1ZM00ySmxNamt4TmpRMiJ9
+    depends_on:
+      - app
+    networks:
+      - inventory-net
+
+networks:
+  inventory-net:
+    driver: bridge

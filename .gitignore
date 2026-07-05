@@ -1,0 +1,54 @@
+# =========================
+# Laravel
+# =========================
+
+src/.env
+src/.env.backup
+src/.phpunit.result.cache
+
+src/vendor/
+src/node_modules/
+
+src/storage/*.key
+src/storage/logs/*
+src/storage/framework/cache/*
+src/storage/framework/sessions/*
+src/storage/framework/testing/*
+src/storage/framework/views/*
+
+src/bootstrap/cache/*.php
+
+# =========================
+# Composer
+# =========================
+
+src/vendor/
+
+# =========================
+# NPM
+# =========================
+
+src/node_modules/
+src/npm-debug.log*
+src/yarn-error.log*
+src/pnpm-debug.log*
+
+# =========================
+# IDE
+# =========================
+
+.vscode/
+.idea/
+
+# =========================
+# OS
+# =========================
+
+Thumbs.db
+.DS_Store
+
+# =========================
+# Docker
+# =========================
+
+*.pid

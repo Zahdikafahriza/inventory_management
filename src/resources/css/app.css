@@ -1,0 +1,488 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   BASE
+   ========================================================================== */
+@layer base {
+    body {
+        @apply bg-slate-50 text-slate-800;
+    }
+
+    ::selection {
+        @apply bg-brand-200 text-brand-900;
+    }
+
+    /* Scrollbar modern & konsisten (Firefox + WebKit) */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
+    }
+
+    *::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    *::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    *::-webkit-scrollbar-thumb {
+        @apply rounded-full bg-slate-300;
+    }
+
+    *::-webkit-scrollbar-thumb:hover {
+        @apply bg-slate-400;
+    }
+
+    /* Focus ring konsisten untuk semua elemen interaktif */
+    a, button, input, select, textarea, [tabindex] {
+        @apply outline-none;
+    }
+
+    a:focus-visible, button:focus-visible, input:focus-visible,
+    select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+        @apply ring-2 ring-brand-500 ring-offset-2 ring-offset-white;
+    }
+}
+
+/* ==========================================================================
+   LAYOUT SHELL — sidebar + topbar
+   ========================================================================== */
+@layer components {
+    .app-shell {
+        @apply min-h-screen bg-slate-50;
+    }
+
+    .app-container {
+        @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+    }
+
+    .page-section {
+        @apply py-6 sm:py-8 lg:py-10;
+    }
+
+    /* ---- Sidebar ---- */
+    .sidebar {
+        @apply fixed inset-y-0 left-0 z-40 flex w-72 flex-col bg-slate-900 transition-all duration-250 ease-in-out;
+    }
+
+    .sidebar.is-collapsed {
+        @apply lg:w-20;
+    }
+
+    .sidebar-brand {
+        @apply flex h-16 shrink-0 items-center gap-3 border-b border-white/10 px-5;
+    }
+
+    .sidebar-nav {
+        @apply flex-1 space-y-1 overflow-y-auto px-3 py-5;
+    }
+
+    .sidebar-link {
+        @apply flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 transition-all duration-200 hover:bg-white/5 hover:text-white;
+    }
+
+    .sidebar-link.is-active {
+        @apply bg-brand-600/15 text-white shadow-[inset_2px_0_0_0_theme(colors.brand.400)];
+    }
+
+    .sidebar-link svg {
+        @apply h-5 w-5 shrink-0;
+    }
+
+    .sidebar-section-label {
+        @apply mt-5 px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 first:mt-0;
+    }
+
+    .sidebar-footer {
+        @apply shrink-0 border-t border-white/10 p-3;
+    }
+
+    /* ---- Topbar ---- */
+    .topbar {
+        @apply sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-slate-200/70 bg-white/75 px-4 backdrop-blur-xl transition-shadow duration-250 sm:px-6;
+    }
+
+    .topbar.is-scrolled {
+        @apply shadow-soft;
+    }
+
+    .topbar-search {
+        @apply flex w-full max-w-md items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-500 transition focus-within:border-brand-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-brand-100;
+    }
+
+    .icon-btn {
+        @apply inline-flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition-all duration-200 hover:bg-slate-100 hover:text-slate-700 active:scale-95;
+    }
+
+    .content-area {
+        @apply flex min-h-screen flex-1 flex-col transition-all duration-250;
+    }
+
+    /* ---- Breadcrumb ---- */
+    .breadcrumb {
+        @apply flex items-center gap-1.5 text-sm text-slate-500;
+    }
+
+    .breadcrumb a {
+        @apply transition hover:text-brand-600;
+    }
+
+    .breadcrumb .is-current {
+        @apply font-semibold text-slate-700;
+    }
+}
+
+/* ==========================================================================
+   CARDS & SECTION HEADERS
+   ========================================================================== */
+@layer components {
+    .page-card {
+        @apply overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-soft transition-shadow duration-250;
+    }
+
+    .soft-card {
+        @apply rounded-2xl border border-slate-200 bg-white/80 shadow-soft backdrop-blur transition-all duration-250 hover:shadow-premium;
+    }
+
+    .stat-card {
+        @apply relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-soft transition-all duration-250 hover:-translate-y-0.5 hover:shadow-premium;
+    }
+
+    .section-heading {
+        @apply text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl;
+    }
+
+    .section-subtitle {
+        @apply text-sm leading-6 text-slate-500 sm:text-base;
+    }
+
+    .form-card {
+        @apply overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft;
+    }
+
+    .form-grid {
+        @apply grid grid-cols-1 gap-6 md:grid-cols-2;
+    }
+}
+
+/* ==========================================================================
+   BUTTONS — konsisten: hover, active, disabled, focus, transition
+   ========================================================================== */
+@layer components {
+    .btn {
+        @apply inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100;
+    }
+
+    .btn svg {
+        @apply h-4 w-4 shrink-0;
+    }
+
+    .btn-primary {
+        @apply btn bg-brand-600 text-white shadow-sm shadow-brand-600/25 hover:bg-brand-700 hover:shadow-md hover:shadow-brand-600/30;
+    }
+
+    .btn-secondary {
+        @apply btn border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 hover:border-slate-300;
+    }
+
+    .btn-ghost {
+        @apply btn text-slate-600 hover:bg-slate-100;
+    }
+
+    .btn-danger {
+        @apply btn bg-red-50 text-red-700 hover:bg-red-100;
+    }
+
+    .btn-danger-solid {
+        @apply btn bg-red-600 text-white shadow-sm shadow-red-600/25 hover:bg-red-700;
+    }
+
+    .btn-sm {
+        @apply px-3 py-1.5 text-xs;
+    }
+
+    .btn-icon {
+        @apply btn h-10 w-10 p-0;
+    }
+}
+
+/* ==========================================================================
+   FORMS
+   ========================================================================== */
+@layer components {
+    .select-input {
+        @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all duration-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400;
+    }
+
+    .field-label {
+        @apply mb-1.5 block text-sm font-medium text-slate-700;
+    }
+}
+
+/* ==========================================================================
+   TABLE — sticky header, hover row, rounded container, responsive
+   ========================================================================== */
+@layer components {
+    .table-wrap {
+        @apply overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-soft;
+    }
+
+    .table-scroll {
+        @apply overflow-x-auto;
+    }
+
+    .data-table {
+        @apply min-w-full divide-y divide-slate-200 text-sm text-slate-700;
+    }
+
+    .data-table thead {
+        @apply sticky top-0 z-10 bg-slate-50/95 backdrop-blur;
+    }
+
+    .data-table th {
+        @apply whitespace-nowrap px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500;
+    }
+
+    .data-table tbody {
+        @apply divide-y divide-slate-100 bg-white;
+    }
+
+    .data-table td {
+        @apply px-4 py-4 align-top text-sm text-slate-600;
+    }
+
+    .data-table tbody tr {
+        @apply transition-colors duration-150 hover:bg-brand-50/50;
+    }
+}
+
+/* ==========================================================================
+   BADGES
+   ========================================================================== */
+@layer components {
+    .badge {
+        @apply inline-flex items-center gap-1 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700;
+    }
+
+    .badge svg {
+        @apply h-3.5 w-3.5;
+    }
+
+    .badge-web {
+        @apply border-slate-200 bg-slate-100 text-slate-600;
+    }
+
+    .badge-n8n {
+        @apply border-violet-200 bg-violet-50 text-violet-700;
+    }
+
+    .badge-system {
+        @apply border-amber-200 bg-amber-50 text-amber-700;
+    }
+
+    .badge-success {
+        @apply border-emerald-200 bg-emerald-50 text-emerald-700;
+    }
+
+    .badge-danger {
+        @apply border-red-200 bg-red-50 text-red-700;
+    }
+
+    .badge-neutral {
+        @apply border-slate-200 bg-slate-100 text-slate-600;
+    }
+}
+
+/* ==========================================================================
+   ALERTS & TOAST
+   ========================================================================== */
+@layer components {
+    .alert {
+        @apply flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm font-medium;
+    }
+
+    .alert-success {
+        @apply alert border-emerald-200 bg-emerald-50 text-emerald-700;
+    }
+
+    .alert-danger {
+        @apply alert border-red-200 bg-red-50 text-red-700;
+    }
+
+    .alert-info {
+        @apply alert border-brand-200 bg-brand-50 text-brand-700;
+    }
+
+    .toast {
+        @apply pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-2xl border p-4 shadow-premium-lg backdrop-blur;
+    }
+
+    .toast-success {
+        @apply toast border-emerald-200 bg-emerald-50/95 text-emerald-800;
+    }
+
+    .toast-error {
+        @apply toast border-red-200 bg-red-50/95 text-red-800;
+    }
+}
+
+/* ==========================================================================
+   TABS / ACCORDION / DROPDOWN POLISH
+   ========================================================================== */
+@layer components {
+    .tabs {
+        @apply flex items-center gap-1 rounded-xl bg-slate-100 p-1;
+    }
+
+    .tab-btn {
+        @apply rounded-lg px-3.5 py-2 text-sm font-medium text-slate-500 transition-all duration-200 hover:text-slate-800;
+    }
+
+    .tab-btn.is-active {
+        @apply bg-white text-slate-900 shadow-soft;
+    }
+
+    .accordion-item {
+        @apply overflow-hidden rounded-2xl border border-slate-200 bg-white;
+    }
+
+    .accordion-trigger {
+        @apply flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left text-sm font-semibold text-slate-800 transition hover:bg-slate-50;
+    }
+
+    .accordion-trigger svg {
+        @apply h-4 w-4 shrink-0 text-slate-400 transition-transform duration-250;
+    }
+
+    .dropdown-panel {
+        @apply overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-premium-lg;
+    }
+
+    .dropdown-item {
+        @apply flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm text-slate-600 transition-colors duration-150 hover:bg-slate-50 hover:text-slate-900;
+    }
+
+    .dropdown-item.is-danger {
+        @apply text-red-600 hover:bg-red-50 hover:text-red-700;
+    }
+}
+
+/* ==========================================================================
+   SKELETON / LOADING / EMPTY STATE / FAB
+   ========================================================================== */
+@layer components {
+    .skeleton {
+        @apply animate-pulse rounded-lg bg-slate-200;
+    }
+
+    .spinner {
+        @apply h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent;
+    }
+
+    .empty-state {
+        @apply flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-14 text-center;
+    }
+
+    .fab {
+        @apply fixed bottom-6 right-6 z-40 inline-flex h-14 w-14 items-center justify-center rounded-full bg-brand-600 text-white shadow-premium-lg transition-all duration-200 hover:bg-brand-700 hover:scale-105 active:scale-95 lg:hidden;
+    }
+
+    .context-menu {
+        @apply absolute z-50 min-w-[10rem] overflow-hidden rounded-xl border border-slate-200 bg-white p-1 shadow-premium-lg animate-scale-in;
+    }
+}
+
+/* ==========================================================================
+   MOBILE CARD LIST (pengganti tabel di layar kecil)
+   ========================================================================== */
+@layer components {
+    .mobile-card-list {
+        @apply flex flex-col gap-3;
+    }
+
+    .mobile-card {
+        @apply rounded-2xl border border-slate-200 bg-white p-4 shadow-soft transition-shadow duration-200 hover:shadow-premium;
+    }
+
+    .mobile-card-top {
+        @apply flex items-start justify-between gap-3;
+    }
+
+    .mobile-card-row {
+        @apply mt-2 flex items-start justify-between gap-3 border-t border-slate-100 pt-2 text-sm first:mt-3 first:border-t-0 first:pt-0;
+    }
+
+    .mobile-card-row span:first-child {
+        @apply shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-400;
+    }
+
+    .mobile-card-row span:last-child {
+        @apply text-right text-slate-700;
+    }
+
+    .mobile-card-actions {
+        @apply mt-4 flex gap-2 border-t border-slate-100 pt-4;
+    }
+
+    .mobile-card-btn {
+        @apply flex-1 rounded-xl px-3 py-2 text-center text-sm font-semibold transition;
+    }
+
+    .mobile-card-btn-neutral {
+        @apply bg-slate-100 text-slate-700 hover:bg-slate-200;
+    }
+
+    .mobile-card-btn-primary {
+        @apply bg-brand-50 text-brand-700 hover:bg-brand-100;
+    }
+
+    .mobile-card-btn-danger {
+        @apply w-full bg-red-50 text-red-700 hover:bg-red-100;
+    }
+}
+
+/* ==========================================================================
+   LOG DETAIL (native <details>)
+   ========================================================================== */
+@layer components {
+    .log-detail summary {
+        @apply cursor-pointer select-none rounded-lg px-2 py-1 text-xs font-semibold text-brand-600 transition hover:bg-brand-50;
+    }
+
+    .log-detail summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .log-detail-panel {
+        @apply mt-2 min-w-[220px] max-w-xs animate-fade-in rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs;
+    }
+
+    .log-detail-row {
+        @apply flex items-start justify-between gap-3 border-b border-slate-200 py-1.5 last:border-b-0;
+    }
+
+    .log-detail-row span:first-child {
+        @apply shrink-0 font-semibold text-slate-500;
+    }
+
+    .log-detail-row span:last-child {
+        @apply text-right text-slate-700;
+    }
+}
+
+/* ==========================================================================
+   AUTH PAGES
+   ========================================================================== */
+@layer components {
+    .auth-panel {
+        @apply rounded-[2rem] border border-white/60 bg-white/90 p-8 shadow-2xl shadow-slate-950/10 backdrop-blur-xl sm:p-10;
+    }
+
+    .auth-kicker {
+        @apply text-xs font-semibold uppercase tracking-[0.3em] text-brand-200;
+    }
+}
