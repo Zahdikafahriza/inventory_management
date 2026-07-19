@@ -1,53 +1,41 @@
 # Inventory Management System
 
-Project      : Inventory Management
-Developer    : Zahdika Fahriza
-Environment  : Docker
-Version      : 1.0.0
+![Docker](https://img.shields.io/badge/Docker-Enabled-blue)
+![Laravel](https://img.shields.io/badge/Laravel-Framework-red)
+![MySQL](https://img.shields.io/badge/Database-MySQL-orange)
+
+## 📌 About Project
+
+**Inventory Management System** adalah aplikasi berbasis web yang digunakan untuk mengelola data inventory, monitoring stok, serta membantu proses administrasi barang.
+
+Aplikasi ini menggunakan **Docker** untuk mempermudah proses instalasi, development, dan deployment.
+
+Project ini juga terintegrasi dengan workflow automation menggunakan **n8n** untuk mendukung proses pengelolaan data.
 
 
-============================================================
-                      ABOUT PROJECT
-============================================================
+## 🛠 Technology
 
-Inventory Management System adalah aplikasi berbasis web yang
-digunakan untuk mengelola data inventory, monitoring stok,
-serta membantu proses administrasi barang.
-
-Aplikasi ini menggunakan Docker untuk mempermudah proses
-instalasi, development, dan deployment.
-
-Project ini juga terintegrasi dengan workflow automation
-menggunakan n8n untuk mendukung proses pengelolaan data.
-
-
-============================================================
-                      TECHNOLOGY
-============================================================
-
-Backend:
+### Backend
 - Laravel
 - PHP
 
-Frontend:
+### Frontend
 - Blade
 - Tailwind CSS
 - JavaScript
 
-Database:
+### Database
 - MySQL
 
-Automation:
+### Automation
 - n8n
 
-Environment:
+### Environment
 - Docker
 - Docker Compose
 
 
-============================================================
-                      REQUIREMENT
-============================================================
+## ⚙️ Requirement
 
 Pastikan sudah memiliki:
 
@@ -56,91 +44,98 @@ Pastikan sudah memiliki:
 - Docker Compose
 
 
-============================================================
-                      INSTALLATION
-============================================================
+## 🚀 Installation
 
-1. Clone repository
+### 1. Clone Repository
 
+```bash
 git clone https://github.com/Zahdikafahriza/inventory_management.git
+```
 
+### 2. Masuk ke Folder Project
 
-2. Masuk ke folder project
-
+```bash
 cd inventory_management
+```
 
+### 3. Setup Environment
 
-3. Copy environment
-
+```bash
 cp .env.example .env
+```
 
+### 4. Jalankan Docker Container
 
-4. Jalankan Docker Container
-
+```bash
 docker compose up -d --build
+```
 
+### 5. Jalankan Database Migration
 
-5. Jalankan migration database
-
+```bash
 docker exec -it nama_container php artisan migrate
+```
 
+### 6. Akses Aplikasi
 
-6. Akses aplikasi
-
+```
 http://localhost
+```
 
 
-============================================================
-                      DOCKER COMMAND
-============================================================
+## 🐳 Docker Command
 
 Menjalankan container:
 
+```bash
 docker compose up -d
-
+```
 
 Menghentikan container:
 
+```bash
 docker compose down
-
+```
 
 Melihat log:
 
+```bash
 docker compose logs -f
+```
 
+Build ulang:
 
-Build ulang container:
-
+```bash
 docker compose up -d --build
+```
 
 
-============================================================
-                      ENVIRONMENT
-============================================================
+## 🔐 Environment
 
 Jangan upload file:
 
+```
 .env
+```
 
-
-File .env berisi konfigurasi sensitif seperti:
+Karena berisi data sensitif seperti:
 
 - Database credential
 - Application key
 - API Key
 
-
 Gunakan:
 
+```
 .env.example
+```
 
 sebagai template konfigurasi.
 
 
-============================================================
-                      PROJECT STRUCTURE
-============================================================
+## 📂 Project Structure
 
+```
 inventory_management/
 
 ├── app/
@@ -151,37 +146,27 @@ inventory_management/
 ├── Dockerfile
 ├── docker-compose.yml
 └── .env.example
+```
 
 
-============================================================
-                      DEPLOYMENT
-============================================================
+## 🌐 Deployment
 
 Project dapat dijalankan pada:
 
-✓ Local Development
-✓ VPS
-✓ Cloud Server
+✅ Local Development  
+✅ VPS  
+✅ Cloud Server  
 
 
-============================================================
-                      LICENSE
-============================================================
+## 📄 License
 
 Project ini dibuat untuk kebutuhan pembelajaran,
 pengembangan sistem, dan portfolio.
 
 
-============================================================
-                      CONTACT
-============================================================
+## 👤 Developer
 
-Developer:
-Zahdika Fahriza
-
+**Zahdika Fahriza**
 
 GitHub:
 https://github.com/Zahdikafahriza
-
-
-============================================================
