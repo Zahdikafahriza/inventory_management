@@ -8,11 +8,10 @@ use Illuminate\Support\Facades\Hash;
 
 class AdminUserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
+        // Role tidak diset di sini lagi; penetapan role dilakukan RbacSeeder
+        // (user pertama otomatis jadi Super Admin).
         User::updateOrCreate(
             ['username' => 'admin'],
             [
@@ -20,7 +19,6 @@ class AdminUserSeeder extends Seeder
                 'username' => 'admin',
                 'email' => 'admin@admin.com',
                 'password' => Hash::make('P@ssw0rd'),
-                'role' => 'admin',
             ]
         );
     }

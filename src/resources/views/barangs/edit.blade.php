@@ -82,18 +82,6 @@
 
                                 <x-master-select name="tipe_spek" label="Tipe / Spesifikasi" :options="$masterOptions['tipe_spek'] ?? []" :selected="$barang->tipe_spek" />
 
-                                <div>
-                                    <x-input-label for="serial_number" :value="__('Serial Number')" />
-                                    <x-text-input id="serial_number" name="serial_number" type="text" class="mt-1 block w-full" :value="old('serial_number', $barang->serial_number)" />
-                                    <x-input-error class="mt-2" :messages="$errors->get('serial_number')" />
-                                </div>
-
-                                <div>
-                                    <x-input-label for="mac_address" :value="__('Mac Address')" />
-                                    <x-text-input id="mac_address" name="mac_address" type="text" class="mt-1 block w-full" :value="old('mac_address', $barang->mac_address)" />
-                                    <x-input-error class="mt-2" :messages="$errors->get('mac_address')" />
-                                </div>
-
                                 <x-master-select name="satuan" label="Satuan" :options="$masterOptions['satuan'] ?? []" :selected="$barang->satuan" />
 
                                 <div>

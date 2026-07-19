@@ -55,23 +55,31 @@
         </div>
 
         {{-- Profile dropdown --}}
-        <x-dropdown align="right" width="56">
+        <x-dropdown align="right" width="64">
             <x-slot name="trigger">
-                <button class="flex items-center gap-2 rounded-xl py-1.5 pl-1.5 pr-2.5 transition hover:bg-slate-100">
-                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white">
+                <button class="flex items-center gap-2.5 rounded-xl py-1.5 pl-1.5 pr-2 transition hover:bg-slate-100">
+                    <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-sm font-semibold text-white shadow-sm">
                         {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
                     </span>
                     <span class="hidden text-left sm:block">
                         <span class="block text-sm font-semibold leading-tight text-slate-800">{{ Auth::user()->name }}</span>
+                        <span class="block text-xs leading-tight text-slate-400">
+                            {{ optional(Auth::user()->getRoleNames())->first() ?? 'Pengguna' }}
+                        </span>
                     </span>
                     <svg data-lucide="chevron-down" class="hidden h-4 w-4 text-slate-400 sm:block"></svg>
                 </button>
             </x-slot>
 
             <x-slot name="content">
-                <div class="px-3 py-2.5">
-                    <p class="truncate text-sm font-semibold text-slate-800">{{ Auth::user()->name }}</p>
-                    <p class="truncate text-xs text-slate-500">{{ Auth::user()->email ?? Auth::user()->username ?? '' }}</p>
+                <div class="flex items-center gap-3 px-3 py-3">
+                    <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-sm font-semibold text-white">
+                        {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
+                    </span>
+                    <div class="min-w-0">
+                        <p class="truncate text-sm font-semibold text-slate-800">{{ Auth::user()->name }}</p>
+                        <p class="truncate text-xs text-slate-500">{{ Auth::user()->email ?? Auth::user()->username ?? '' }}</p>
+                    </div>
                 </div>
                 <div class="my-1 border-t border-slate-100"></div>
                 <a href="{{ route('profile.edit') }}" class="dropdown-item">

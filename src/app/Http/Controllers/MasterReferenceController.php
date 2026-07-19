@@ -34,7 +34,7 @@ class MasterReferenceController extends Controller
 
     protected function authorizeAdmin(Request $request): void
     {
-        abort_unless($request->user() && $request->user()->role === 'admin', Response::HTTP_FORBIDDEN);
+        abort_unless($request->user()?->can('create master_reference') || $request->user()?->can('update master_reference') || $request->user()?->can('delete master_reference'), Response::HTTP_FORBIDDEN);
     }
 
     public function index(Request $request, string $type)

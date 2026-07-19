@@ -19,6 +19,11 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(Barang::class, BarangPolicy::class);
 
+        // Super Admin melewati semua pengecekan permission.
+        Gate::before(function ($user, $ability) {
+            return method_exists($user, 'hasRole') && $user->hasRole('Super Admin') ? true : null;
+        });
+
         Paginator::defaultView('vendor.pagination.custom');
 
         // Saat di belakang Cloudflare Tunnel (APP_URL https), paksa semua URL

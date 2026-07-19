@@ -1,6 +1,5 @@
 <div
     x-data="toastStack()"
-    x-init="init()"
     class="pointer-events-none fixed inset-x-0 top-4 z-[100] flex flex-col items-center gap-3 px-4 sm:items-end sm:px-6"
     aria-live="polite"
 >
@@ -36,7 +35,12 @@
         return {
             toasts: [],
             counter: 0,
+            _initialized: false,
             init() {
+                // Guard: pastikan flash message hanya diproses sekali,
+                // walau init() ter-trigger lebih dari sekali.
+                if (this._initialized) return;
+                this._initialized = true;
                 (window.__flashMessages || []).forEach((f) => this.push(f.type, f.message));
             },
             push(type, message) {

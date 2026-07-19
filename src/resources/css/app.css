@@ -66,39 +66,86 @@
 
     /* ---- Sidebar ---- */
     .sidebar {
-        @apply fixed inset-y-0 left-0 z-40 flex w-72 flex-col bg-slate-900 transition-all duration-250 ease-in-out;
+        @apply fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-white/5 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 transition-all duration-300 ease-in-out;
     }
 
     .sidebar.is-collapsed {
-        @apply lg:w-20;
+        @apply lg:w-[78px];
     }
 
     .sidebar-brand {
-        @apply flex h-16 shrink-0 items-center gap-3 border-b border-white/10 px-5;
+        @apply flex h-16 shrink-0 items-center gap-3 border-b border-white/5 px-4;
     }
 
     .sidebar-nav {
-        @apply flex-1 space-y-1 overflow-y-auto px-3 py-5;
+        @apply flex-1 space-y-0.5 overflow-y-auto overflow-x-hidden px-3 py-4;
     }
 
+    /* Baris menu */
     .sidebar-link {
-        @apply flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 transition-all duration-200 hover:bg-white/5 hover:text-white;
+        @apply relative flex items-center gap-3 rounded-xl px-2.5 py-2 text-sm font-medium text-slate-400 transition-all duration-200 hover:bg-white/[0.06] hover:text-white;
+    }
+
+    /* Tile ikon dalam kotak */
+    .sidebar-link > svg {
+        @apply h-9 w-9 shrink-0 rounded-lg bg-white/[0.04] p-2 text-slate-400 transition-all duration-200;
+    }
+
+    .sidebar-link:hover > svg {
+        @apply bg-white/[0.08] text-white;
     }
 
     .sidebar-link.is-active {
-        @apply bg-brand-600/15 text-white shadow-[inset_2px_0_0_0_theme(colors.brand.400)];
+        @apply bg-gradient-to-r from-brand-600/25 to-brand-500/[0.06] text-white;
     }
 
-    .sidebar-link svg {
-        @apply h-5 w-5 shrink-0;
+    .sidebar-link.is-active > svg {
+        @apply bg-brand-500 text-white shadow-lg shadow-brand-600/40;
+    }
+
+    /* Indikator pil di kiri item aktif */
+    .sidebar-link.is-active::before {
+        content: '';
+        @apply absolute -left-3 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-brand-400;
+    }
+
+    /* Chevron submenu tidak kena styling tile */
+    .sidebar-link .chevron {
+        @apply h-4 w-4 shrink-0 rounded-none bg-transparent p-0 text-slate-500;
     }
 
     .sidebar-section-label {
-        @apply mt-5 px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 first:mt-0;
+        @apply mt-5 px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500/70 first:mt-1;
     }
 
     .sidebar-footer {
-        @apply shrink-0 border-t border-white/10 p-3;
+        @apply shrink-0 space-y-1 border-t border-white/5 p-3;
+    }
+
+    /* Submenu (child link) */
+    .sidebar-child {
+        @apply relative flex items-center gap-2.5 rounded-lg py-2 pl-3.5 pr-2 text-sm font-medium text-slate-400 transition-all duration-200 hover:bg-white/[0.05] hover:text-white;
+    }
+
+    .sidebar-child .dot {
+        @apply h-1.5 w-1.5 shrink-0 rounded-full bg-slate-600 transition-colors duration-200;
+    }
+
+    .sidebar-child.is-active {
+        @apply text-white;
+    }
+
+    .sidebar-child.is-active .dot {
+        @apply bg-brand-400;
+    }
+
+    /* Blok profil user di footer sidebar */
+    .sidebar-user {
+        @apply flex items-center gap-3 rounded-xl px-2.5 py-2 text-left transition-colors duration-200 hover:bg-white/[0.06];
+    }
+
+    .sidebar-user-avatar {
+        @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 text-sm font-semibold text-white;
     }
 
     /* ---- Topbar ---- */
@@ -174,7 +221,7 @@
    ========================================================================== */
 @layer components {
     .btn {
-        @apply inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100;
+        @apply inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none disabled:active:scale-100;
     }
 
     .btn svg {
@@ -182,31 +229,47 @@
     }
 
     .btn-primary {
-        @apply btn bg-brand-600 text-white shadow-sm shadow-brand-600/25 hover:bg-brand-700 hover:shadow-md hover:shadow-brand-600/30;
+        @apply btn bg-brand-600 text-white shadow-sm shadow-brand-600/25 hover:bg-brand-700 hover:shadow-md hover:shadow-brand-600/30 focus-visible:ring-brand-500;
     }
 
     .btn-secondary {
-        @apply btn border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 hover:border-slate-300;
+        @apply btn border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 hover:border-slate-300 focus-visible:ring-slate-400;
     }
 
     .btn-ghost {
-        @apply btn text-slate-600 hover:bg-slate-100;
+        @apply btn text-slate-600 hover:bg-slate-100 focus-visible:ring-slate-300;
+    }
+
+    .btn-outline {
+        @apply btn border border-brand-200 bg-transparent text-brand-700 hover:bg-brand-50 hover:border-brand-300 focus-visible:ring-brand-400;
+    }
+
+    .btn-success {
+        @apply btn bg-emerald-600 text-white shadow-sm shadow-emerald-600/25 hover:bg-emerald-700 hover:shadow-md focus-visible:ring-emerald-500;
     }
 
     .btn-danger {
-        @apply btn bg-red-50 text-red-700 hover:bg-red-100;
+        @apply btn bg-red-50 text-red-700 hover:bg-red-100 focus-visible:ring-red-400;
     }
 
     .btn-danger-solid {
-        @apply btn bg-red-600 text-white shadow-sm shadow-red-600/25 hover:bg-red-700;
+        @apply btn bg-red-600 text-white shadow-sm shadow-red-600/25 hover:bg-red-700 focus-visible:ring-red-500;
     }
 
     .btn-sm {
-        @apply px-3 py-1.5 text-xs;
+        @apply gap-1.5 rounded-lg px-3 py-1.5 text-xs;
+    }
+
+    .btn-lg {
+        @apply gap-2.5 rounded-xl2 px-5 py-3 text-base;
     }
 
     .btn-icon {
         @apply btn h-10 w-10 p-0;
+    }
+
+    .btn-icon-sm {
+        @apply btn h-8 w-8 rounded-lg p-0;
     }
 }
 
@@ -218,8 +281,57 @@
         @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all duration-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400;
     }
 
+    /* Alias eksplisit untuk input teks & textarea agar konsisten */
+    .text-input {
+        @apply select-input;
+    }
+
+    .textarea-input {
+        @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-800 shadow-sm transition-all duration-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400;
+    }
+
     .field-label {
         @apply mb-1.5 block text-sm font-medium text-slate-700;
+    }
+
+    .field-hint {
+        @apply mt-1.5 text-xs text-slate-400;
+    }
+
+    .field-error {
+        @apply mt-1.5 flex items-center gap-1 text-xs font-medium text-red-600;
+    }
+
+    /* Checkbox & radio (dipakai bersama @tailwindcss/forms) */
+    .form-check {
+        @apply h-4 w-4 rounded border-slate-300 text-brand-600 shadow-sm transition focus:ring-2 focus:ring-brand-500 focus:ring-offset-0;
+    }
+
+    .form-radio {
+        @apply h-4 w-4 border-slate-300 text-brand-600 shadow-sm transition focus:ring-2 focus:ring-brand-500;
+    }
+
+    /* Kartu pilihan (checkbox/radio dalam bingkai yang bisa diklik) */
+    .choice-card {
+        @apply flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-3.5 py-3 text-sm transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 has-[:checked]:border-brand-400 has-[:checked]:bg-brand-50 has-[:checked]:ring-1 has-[:checked]:ring-brand-300;
+    }
+
+    /* Toggle switch murni CSS (checkbox tersembunyi + track) */
+    .switch {
+        @apply relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full bg-slate-200 transition-colors duration-200;
+    }
+
+    .switch-knob {
+        @apply pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform duration-200;
+    }
+
+    .peer:checked ~ .switch,
+    .switch:has(:checked) {
+        @apply bg-brand-600;
+    }
+
+    .switch:has(:checked) .switch-knob {
+        @apply translate-x-5;
     }
 }
 

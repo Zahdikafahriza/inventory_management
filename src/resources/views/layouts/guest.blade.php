@@ -7,7 +7,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ config('app.name', 'NISA Inventory') }}</title>
-
+    
+    <link rel="icon" type="image/png" href="{{ asset('images/Logo Disa.png') }}" />
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
 
@@ -28,7 +29,7 @@
                         Kelola stok dan data inventaris.
                     </h1>
                     <p class="mt-6 text-lg leading-8 text-slate-300">
-                        Dashboard ini membantu Anda memantau barang, menjaga data tetap terstruktur, dan memastikan seluruh aktivitas inventaris terdokumentasi dengan baik.
+                        Dashboard ini membantu Anda memantau barang, menjaga data tetap terstruktur, dan bekerja lebih nyaman setiap hari.
                     </p>
                     <div class="mt-10 flex items-center gap-6 text-sm text-slate-400">
                         <div class="flex items-center gap-2">
@@ -59,7 +60,7 @@
                 </div>
 
                 <p class="mt-6 text-center text-sm text-slate-400">
-                    © {{ date('Y') }}    System
+                    © {{ date('Y') }} PT Digital Inovasi Solusi Asia. All rights reserved.
                 </p>
             </div>
         </div>

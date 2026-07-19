@@ -7,6 +7,7 @@
 
         <title>{{ config('app.name', 'NISA Inventory') }}</title>
 
+        <link rel="icon" type="image/png" href="{{ asset('images/Logo Disa.png') }}" />
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
@@ -30,7 +31,7 @@
 
             <x-sidebar />
 
-            <div class="content-area" :class="collapsed ? 'lg:pl-20' : 'lg:pl-72'">
+            <div class="content-area" :class="collapsed ? 'lg:pl-[78px]' : 'lg:pl-72'">
                 <x-topbar>
                     <x-slot name="breadcrumb">
                         {{ $breadcrumb ?? '' }}
@@ -53,12 +54,19 @@
             </div>
         </div>
 
-        {{-- Flash messages -> toast --}}
+        {{-- Flash messages -> toast.
+             Catatan: session('status') SENGAJA tidak dimasukkan ke sini.
+             Key 'status' dipakai oleh Breeze untuk pesan inline (mis. teks
+             "Saved." di form profil/password, dan box hijau di halaman
+             verifikasi email). Kalau ikut dipush ke toast, pesan yang sama
+             akan tampil dua kali (inline + popup), dan popup-nya menampilkan
+             slug mentah seperti "profile-updated" alih-alih teks yang layak
+             dibaca. Toast di sini cukup untuk 'success' dan 'error' yang
+             memang hanya dirender lewat komponen ini. --}}
         <script>
             window.__flashMessages = [
                 @if(session('success')) { type: 'success', message: @json(session('success')) }, @endif
                 @if(session('error')) { type: 'error', message: @json(session('error')) }, @endif
-                @if(session('status')) { type: 'success', message: @json(session('status')) }, @endif
             ];
         </script>
 
@@ -68,16 +76,20 @@
             function confirmDelete(form, itemName) {
                 Swal.fire({
                     title: 'Hapus data ini?',
-                    html: `Data <strong>${itemName}</strong> akan dihapus permanen dan tidak bisa dikembalikan.`,
+                    html: `Data <strong>${itemName ?? ''}</strong> akan dihapus permanen dan tidak bisa dikembalikan.`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonText: 'Ya, hapus',
                     cancelButtonText: 'Batal',
-                    confirmButtonColor: '#dc2626',
-                    cancelButtonColor: '#64748b',
                     reverseButtons: true,
                     focusCancel: true,
-                    customClass: { popup: 'rounded-2xl' },
+                    buttonsStyling: false,
+                    customClass: {
+                        popup: 'rounded-2xl',
+                        title: 'text-slate-900',
+                        confirmButton: 'rounded-xl bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 text-sm font-semibold',
+                        cancelButton: 'rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 px-4 py-2.5 text-sm font-semibold mr-2',
+                    },
                 }).then((result) => {
                     if (result.isConfirmed) form.submit();
                 });
@@ -92,7 +104,11 @@
         <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
 
         <script>
-            if (window.lucide) lucide.createIcons();
+            const renderIcons = () => window.lucide && lucide.createIcons();
+            renderIcons();
+            // Render ulang saat Alpine memunculkan elemen baru (mis. flyout, dropdown).
+            document.addEventListener('alpine:initialized', renderIcons);
+            document.addEventListener('transitionend', renderIcons, { passive: true });
         </script>
     </body>
 </html>

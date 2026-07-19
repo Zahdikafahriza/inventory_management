@@ -7,35 +7,28 @@ use App\Models\User;
 
 class BarangPolicy
 {
-    /**
-     * Semua user yang sudah login (role apa pun) boleh melihat data.
-     */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->can('view barang');
     }
 
     public function view(User $user, Barang $barang): bool
     {
-        return true;
+        return $user->can('view barang');
     }
 
-    /**
-     * Hanya admin yang boleh tambah, ubah, hapus data barang.
-     * User biasa bersifat read-only total sesuai kebijakan yang ditetapkan.
-     */
     public function create(User $user): bool
     {
-        return $user->role === 'admin';
+        return $user->can('create barang');
     }
 
     public function update(User $user, Barang $barang): bool
     {
-        return $user->role === 'admin';
+        return $user->can('update barang');
     }
 
     public function delete(User $user, Barang $barang): bool
     {
-        return $user->role === 'admin';
+        return $user->can('delete barang');
     }
 }

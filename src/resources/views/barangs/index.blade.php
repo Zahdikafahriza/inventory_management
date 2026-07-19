@@ -16,9 +16,20 @@
             </div>
 
             @can('create', \App\Models\Barang::class)
-            <a href="{{ route('barangs.create') }}" class="btn-primary">
-                <svg data-lucide="plus"></svg>
-                Tambah Barang
+            <div class="flex flex-wrap gap-3">
+                <a href="{{ route('barangs.export', ['q' => $search, 'stok' => $stokFilter]) }}" class="btn-secondary">
+                    <svg data-lucide="file-down"></svg>
+                    Export Excel
+                </a>
+                <a href="{{ route('barangs.create') }}" class="btn-primary">
+                    <svg data-lucide="plus"></svg>
+                    Tambah Barang
+                </a>
+            </div>
+            @else
+            <a href="{{ route('barangs.export', ['q' => $search, 'stok' => $stokFilter]) }}" class="btn-secondary">
+                <svg data-lucide="file-down"></svg>
+                Export Excel
             </a>
             @endcan
         </div>
@@ -52,6 +63,7 @@
                             >
                         </label>
                         <input type="hidden" name="per_page" value="{{ $perPage }}">
+                        <input type="hidden" name="stok" value="{{ $stokFilter }}">
                         <div class="flex gap-2">
                             <button type="submit" class="btn-primary">
                                 <svg data-lucide="search"></svg>
@@ -65,6 +77,33 @@
                             @endif
                         </div>
                     </form>
+
+                    {{-- Filter status stok --}}
+                    @php
+                        $chips = [
+                            ''        => ['Semua', $stokCounts['semua'], 'badge-neutral'],
+                            'aman'    => ['Stok Aman', $stokCounts['aman'], 'badge-success'],
+                            'menipis' => ['Stok Menipis', $stokCounts['menipis'], 'badge-system'],
+                            'habis'   => ['Stok Habis', $stokCounts['habis'], 'badge-danger'],
+                        ];
+                    @endphp
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        @foreach($chips as $val => [$label, $count, $badgeClass])
+                        @php($active = (string) $stokFilter === (string) $val)
+                        <a href="{{ route('barangs.index', array_filter(['q' => $search, 'per_page' => $perPage, 'stok' => $val])) }}"
+                            class="inline-flex items-center gap-1 rounded-full border px-3.5 py-1.5 text-sm font-medium transition
+                                {{ $active
+                                    ? 'border-brand-500 bg-brand-50 text-brand-700 shadow-sm'
+                                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50' }}">
+                            @if($val === 'habis')<span class="h-2 w-2 rounded-full bg-red-500"></span>
+                            @elseif($val === 'menipis')<span class="h-2 w-2 rounded-full bg-amber-500"></span>
+                            @elseif($val === 'aman')<span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                            @endif
+                            {{ $label }}
+                            <span class="rounded-full bg-slate-100 px-1.5 text-xs font-semibold text-slate-500">{{ number_format($count) }}</span>
+                        </a>
+                        @endforeach
+                    </div>
                 </div>
 
                 <div class="p-6 sm:p-8">
@@ -73,12 +112,12 @@
                         <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
                             <svg data-lucide="package-search" class="h-8 w-8"></svg>
                         </div>
-                        @if($search !== '')
+                        @if($search !== '' || $stokFilter)
                         <h3 class="mt-5 text-lg font-semibold text-slate-900">Tidak ada barang yang cocok</h3>
-                        <p class="mt-2 max-w-md text-sm leading-6 text-slate-500">Coba kata kunci pencarian lain, atau reset filter untuk melihat semua barang.</p>
+                        <p class="mt-2 max-w-md text-sm leading-6 text-slate-500">Coba ubah kata kunci atau filter status stok, atau reset untuk melihat semua barang.</p>
                         <a href="{{ route('barangs.index') }}" class="btn-primary mt-6">
                             <svg data-lucide="rotate-ccw"></svg>
-                            Reset Pencarian
+                            Reset Filter
                         </a>
                         @else
                         <h3 class="mt-5 text-lg font-semibold text-slate-900">Belum ada data barang</h3>
@@ -106,8 +145,6 @@
                                         <th>Sub Kategori</th>
                                         <th>Merk</th>
                                         <th>Type/Spek</th>
-                                        <th>Serial Number</th>
-                                        <th>Mac-Address</th>
                                         <th>Satuan</th>
                                         <th>Kondisi</th>
                                         <th>Lokasi</th>
@@ -137,12 +174,18 @@
                                         <td>{{ $barang->sub_kategori ?? '-' }}</td>
                                         <td>{{ $barang->merk ?? '-' }}</td>
                                         <td>{{ $barang->tipe_spek ?? '-' }}</td>
-                                        <td>{{ $barang->serial_number ?? '-' }}</td>
-                                        <td>{{ $barang->mac_address ?? '-' }}</td>
                                         <td>{{ $barang->satuan ?? '-' }}</td>
                                         <td><span class="badge-neutral badge">{{ $barang->kondisi }}</span></td>
                                         <td>{{ $barang->lokasi ?? '-' }}</td>
-                                        <td class="font-semibold text-slate-800">{{ number_format($barang->stok) }}</td>
+                                        <td class="whitespace-nowrap">
+                                            <span class="font-semibold text-slate-800">{{ number_format($barang->stok) }}</span>
+                                            @php($ss = $barang->stokStatusValue())
+                                            @if($ss === 'habis')
+                                            <span class="badge badge-danger ml-1">Habis</span>
+                                            @elseif($ss === 'menipis')
+                                            <span class="badge badge-system ml-1">Menipis</span>
+                                            @endif
+                                        </td>
                                         <td><span class="badge badge-success">{{ $barang->status }}</span></td>
                                         <td>{{ $barang->pic ?? '-' }}</td>
                                         <td class="text-right whitespace-nowrap">
@@ -190,7 +233,11 @@
                             <div class="mobile-card-row"><span>Serial / Mac</span><span>{{ $barang->serial_number ?? '-' }} / {{ $barang->mac_address ?? '-' }}</span></div>
                             <div class="mobile-card-row"><span>Kondisi</span><span>{{ $barang->kondisi }}</span></div>
                             <div class="mobile-card-row"><span>Lokasi</span><span>{{ $barang->lokasi ?? '-' }}</span></div>
-                            <div class="mobile-card-row"><span>Stok</span><span class="font-semibold">{{ number_format($barang->stok) }} {{ $barang->satuan }}</span></div>
+                            <div class="mobile-card-row"><span>Stok</span><span class="font-semibold">{{ number_format($barang->stok) }} {{ $barang->satuan }}
+                                @php($ss = $barang->stokStatusValue())
+                                @if($ss === 'habis')<span class="badge badge-danger ml-1">Habis</span>
+                                @elseif($ss === 'menipis')<span class="badge badge-system ml-1">Menipis</span>@endif
+                            </span></div>
                             <div class="mobile-card-row"><span>PIC</span><span>{{ $barang->pic ?? '-' }}</span></div>
 
                             <div class="mobile-card-actions">
@@ -215,6 +262,7 @@
                     <div class="mt-6 flex flex-col items-center gap-4 border-t border-slate-100 pt-6 sm:flex-row sm:justify-between">
                         <form method="GET" class="flex items-center gap-3">
                             <input type="hidden" name="q" value="{{ $search }}">
+                            <input type="hidden" name="stok" value="{{ $stokFilter }}">
                             <span class="text-sm text-slate-500">Tampilkan</span>
                             <select
                                 name="per_page"

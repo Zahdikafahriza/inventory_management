@@ -10,7 +10,7 @@ class MasterReferenceRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() && $this->user()->role === 'admin';
+        return $this->user()?->can('update master_reference') || $this->user()?->can('create master_reference');
     }
 
     protected function masterTable(): string

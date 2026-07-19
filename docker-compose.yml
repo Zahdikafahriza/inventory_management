@@ -12,6 +12,7 @@ services:
       - ./src:/var/www
     ports:
       - "8000:8000"
+    command: php artisan serve --host=0.0.0.0 --port=8000
     networks:
       - inventory-net
 
@@ -31,11 +32,9 @@ services:
     image: cloudflare/cloudflared:latest
     container_name: inventory_cloudflared
     restart: unless-stopped
-    command: tunnel --no-autoupdate run
-    environment:
-      # Token dari Cloudflare Zero Trust > Networks > Tunnels > Install connector.
-      # Simpan nilainya di file .env (di folder yang sama dengan compose ini).
-      - TUNNEL_TOKEN=eyJhIjoiMzllM2VhOWNjZjRlOGEzZWIyMzY3ODE1NmNmNmE3ZWUiLCJ0IjoiYWQyZDVjZDMtYjE1Zi00YzJmLWFjMWYtNzAxOWQwODE5M2NmIiwicyI6Ik5EUXhNalprTTJVdFlXSmpNUzAwTlRnekxXSTNZell0Wm1ZM00ySmxNamt4TmpRMiJ9
+    command: tunnel --config /etc/cloudflared/config.yml run
+    volumes:
+      - ./cloudflared:/etc/cloudflared
     depends_on:
       - app
     networks:

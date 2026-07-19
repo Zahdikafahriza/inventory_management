@@ -49,8 +49,6 @@
                             'Sub Kategori' => $barang->sub_kategori,
                             'Merk' => $barang->merk,
                             'Tipe/Spek' => $barang->tipe_spek,
-                            'Serial Number' => $barang->serial_number,
-                            'Mac Address' => $barang->mac_address,
                             'Satuan' => $barang->satuan,
                             'Stok' => number_format($barang->stok),
                             'Kondisi' => $barang->kondisi,

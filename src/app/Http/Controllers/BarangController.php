@@ -12,8 +12,9 @@ class BarangController extends Controller
 {
     public function index(Request $request)
     {
-        $perPage = $request->get('per_page', 20);
-        $search  = trim((string) $request->get('q', ''));
+        $perPage    = $request->get('per_page', 20);
+        $search     = trim((string) $request->get('q', ''));
+        $stokFilter = $request->get('stok'); // habis | menipis | aman | null
 
         $query = Barang::query()->orderBy('kode_aset');
 
@@ -22,13 +23,34 @@ class BarangController extends Controller
                 $q->where('kode_aset', 'like', "%{$search}%")
                     ->orWhere('nama_aset', 'like', "%{$search}%")
                     ->orWhere('kategori', 'like', "%{$search}%")
-                    ->orWhere('serial_number', 'like', "%{$search}%")
                     ->orWhere('lokasi', 'like', "%{$search}%")
                     ->orWhere('pic', 'like', "%{$search}%");
             });
         }
 
+        if (in_array($stokFilter, ['habis', 'menipis', 'aman'], true)) {
+            $query->stokStatus($stokFilter);
+        }
+
         $totalBarang = (clone $query)->count();
+
+        // Hitungan untuk chip filter (menghormati pencarian, tapi tidak filter stok).
+        $countQuery = Barang::query();
+        if ($search !== '') {
+            $countQuery->where(function ($q) use ($search) {
+                $q->where('kode_aset', 'like', "%{$search}%")
+                    ->orWhere('nama_aset', 'like', "%{$search}%")
+                    ->orWhere('kategori', 'like', "%{$search}%")
+                    ->orWhere('lokasi', 'like', "%{$search}%")
+                    ->orWhere('pic', 'like', "%{$search}%");
+            });
+        }
+        $stokCounts = [
+            'semua'   => (clone $countQuery)->count(),
+            'habis'   => (clone $countQuery)->stokStatus('habis')->count(),
+            'menipis' => (clone $countQuery)->stokStatus('menipis')->count(),
+            'aman'    => (clone $countQuery)->stokStatus('aman')->count(),
+        ];
 
         if ($perPage === 'all') {
             $barangs = $query->get();
@@ -42,7 +64,21 @@ class BarangController extends Controller
             $barangs = $query->paginate($perPage)->withQueryString();
         }
 
-        return view('barangs.index', compact('barangs', 'perPage', 'search', 'totalBarang'));
+        return view('barangs.index', compact('barangs', 'perPage', 'search', 'totalBarang', 'stokFilter', 'stokCounts'));
+    }
+
+    /**
+     * Export seluruh data barang ke XLSX (menghormati filter pencarian aktif).
+     */
+    public function export(Request $request, \App\Services\BarangExport $exporter)
+    {
+        $search     = trim((string) $request->get('q', ''));
+        $stokFilter = $request->get('stok');
+
+        return $exporter->download(
+            $search !== '' ? $search : null,
+            in_array($stokFilter, ['habis', 'menipis', 'aman'], true) ? $stokFilter : null,
+        );
     }
 
     public function create()
@@ -62,8 +98,6 @@ class BarangController extends Controller
             'sub_kategori'  => 'nullable|max:100',
             'merk'          => 'nullable|max:100',
             'tipe_spek'     => 'nullable|max:255',
-            'serial_number' => 'nullable|max:150',
-            'mac_address'   => 'nullable|max:100',
             'satuan'        => 'nullable|max:50',
             'stok'          => 'required|integer|min:0',
             'kondisi'       => 'required',

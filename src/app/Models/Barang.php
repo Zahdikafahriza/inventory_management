@@ -9,6 +9,9 @@ class Barang extends Model
 {
     protected $table = 'barangs';
 
+    /** Ambang stok menipis: stok di antara 1 dan nilai ini dianggap menipis. */
+    public const STOK_MENIPIS_THRESHOLD = 5;
+
     protected $fillable = [
         'kode_aset',
         'kategori',
@@ -16,8 +19,6 @@ class Barang extends Model
         'nama_aset',
         'merk',
         'tipe_spek',
-        'serial_number',
-        'mac_address',
         'satuan',
         'stok',
         'kondisi',
@@ -37,6 +38,40 @@ class Barang extends Model
         return $this->morphMany(ActivityLog::class, 'loggable');
     }
 
+    /**
+     * Status stok berdasarkan jumlah: 'habis' | 'menipis' | 'aman'.
+     */
+    // app/Models/Barang.php
+    /** Label ramah untuk status stok. */
+    public function stokStatusLabel(): string
+    {
+        return match ($this->stokStatusValue()) {
+            'habis'   => 'Stok Habis',
+            'menipis' => 'Stok Menipis',
+            default   => 'Stok Aman',
+        };
+    }
+
+    /** Scope: filter berdasarkan status stok ('habis' | 'menipis' | 'aman'). */
+    public function scopeStokStatus($query, $status)
+    {
+        return match ($status) {
+            'habis'   => $query->where('stok', '<=', 0),
+            'menipis' => $query->where('stok', '>', 0)->where('stok', '<=', self::STOK_MENIPIS_THRESHOLD),
+            'aman'    => $query->where('stok', '>', self::STOK_MENIPIS_THRESHOLD),
+            default   => $query,
+        };
+    }
+
+    /** Nilai mentah status stok utk 1 barang: 'habis' | 'menipis' | 'aman'. */
+    public function stokStatusValue(): string
+    {
+        return match (true) {
+            $this->stok <= 0 => 'habis',
+            $this->stok <= self::STOK_MENIPIS_THRESHOLD => 'menipis',
+            default => 'aman',
+        };
+    }
     /**
      * Peta kategori -> prefix kode aset.
      * Alat = A, Bahan = B. Kategori lain (kalau ada) fallback ke huruf pertamanya.
