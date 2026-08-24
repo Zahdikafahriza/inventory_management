@@ -64,6 +64,17 @@ class BarangController extends Controller
             $barangs = $query->paginate($perPage)->withQueryString();
         }
 
+        // Live search: request dari axios (bootstrap.js set header X-Requested-With
+        // otomatis di semua request) cukup dibalas partial HTML + angka total,
+        // TANPA render layout penuh. Query/filter/pagination-nya sama persis
+        // dengan request biasa, cuma bentuk responsnya beda.
+        if ($request->ajax()) {
+            return response()->json([
+                'html'  => view('barangs.partials.results', compact('barangs', 'perPage', 'search', 'totalBarang', 'stokFilter', 'stokCounts'))->render(),
+                'total' => $totalBarang,
+            ]);
+        }
+
         return view('barangs.index', compact('barangs', 'perPage', 'search', 'totalBarang', 'stokFilter', 'stokCounts'));
     }
 

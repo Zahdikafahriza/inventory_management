@@ -124,6 +124,15 @@
 
     <script>
     function confirmStart(form) {
+        // Fix tombol transparan: sebelumnya hanya .swal2-cancel yang dipaksa
+        // tampil lewat didOpen. Ada aturan CSS global di project ini yang
+        // kemungkinan menimpa .swal2-styled (confirm & cancel sekaligus),
+        // jadi confirm button pun ikut transparan tanpa background. Sekarang
+        // KEDUA tombol dipaksa tampil DAN diberi warna background eksplisit,
+        // tidak bergantung pada Tailwind class yang bisa ter-purge saat build.
+        //
+        // Solusi permanen: cari & hapus aturan CSS aslinya
+        // (grep -rn "swal2" resources/css resources/sass), ini jaring pengaman.
         Swal.fire({
             title: 'Mulai Stock Opname baru?',
             html: `
@@ -134,14 +143,24 @@
             showCancelButton: true,
             confirmButtonText: 'Ya, mulai',
             cancelButtonText: 'Batal',
+            confirmButtonColor: '#4f46e5',
+            cancelButtonColor: '#64748b',
             reverseButtons: true,
             focusCancel: true,
-            buttonsStyling: false,
             customClass: {
                 popup: 'rounded-2xl',
-                title: 'text-slate-900',
-                confirmButton: 'rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 text-sm font-semibold',
-                cancelButton: 'rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 px-4 py-2.5 text-sm font-semibold mr-2',
+            },
+            didOpen: () => {
+                const confirmBtn = Swal.getConfirmButton();
+                const cancelBtn = Swal.getCancelButton();
+                [[confirmBtn, '#4f46e5'], [cancelBtn, '#64748b']].forEach(([btn, color]) => {
+                    if (!btn) return;
+                    btn.style.setProperty('background-color', color, 'important');
+                    btn.style.setProperty('color', '#ffffff', 'important');
+                    btn.style.setProperty('display', 'inline-block', 'important');
+                    btn.style.setProperty('visibility', 'visible', 'important');
+                    btn.style.setProperty('opacity', '1', 'important');
+                });
             },
         }).then((result) => {
             if (result.isConfirmed) {

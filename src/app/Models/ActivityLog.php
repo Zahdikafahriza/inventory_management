@@ -35,25 +35,43 @@ class ActivityLog extends Model
         return $this->morphTo();
     }
 
+    /**
+     * Label tampilan untuk kolom "Item" di halaman log.
+     * Digeneralisasi supaya jalan untuk berbagai jenis loggable
+     * (Barang, StockOpnameSession, User/login, model master lain),
+     * bukan cuma yang punya kode_aset/nama_aset.
+     */
     public function displayLabel(): string
     {
         if ($this->loggable) {
-            $kode = $this->loggable->kode_aset ?? null;
-            $nama = $this->loggable->nama_aset ?? null;
+            $m = $this->loggable;
 
-            if ($kode || $nama) {
-                return trim(collect([$kode, $nama])->filter()->implode(' — '));
+            if (isset($m->kode_aset) || isset($m->nama_aset)) {
+                return trim(collect([$m->kode_aset ?? null, $m->nama_aset ?? null])->filter()->implode(' — '));
+            }
+
+            if (isset($m->kode_so)) {
+                return $m->kode_so;
+            }
+
+            if (isset($m->name)) {
+                return $m->name;
+            }
+
+            if (isset($m->nama)) {
+                return $m->nama;
             }
         }
 
-        $metaKode = $this->metadata['kode_aset'] ?? null;
-        $metaNama = $this->metadata['nama_aset'] ?? null;
+        // loggable sudah terhapus / tidak ada relasi: fallback ke metadata.
+        $metaKode = $this->metadata['kode_aset'] ?? $this->metadata['kode_so'] ?? null;
+        $metaNama = $this->metadata['nama_aset'] ?? $this->metadata['nama'] ?? $this->metadata['label'] ?? null;
 
         if ($metaKode || $metaNama) {
             return trim(collect([$metaKode, $metaNama])->filter()->implode(' — ')) . ' (dihapus)';
         }
 
-        return 'Item #' . $this->loggable_id;
+        return class_basename($this->loggable_type) . ' #' . $this->loggable_id;
     }
 
     public function actorLabel(): string
@@ -78,6 +96,15 @@ class ActivityLog extends Model
             'lokasi'             => 'Lokasi',
             'satuan'             => 'Satuan',
             'keterangan'         => 'Keterangan',
+            'kode_so'            => 'Kode SO',
+            'jumlah_barang'      => 'Jumlah Barang',
+            'jumlah_berubah'     => 'Jumlah Berubah',
+            'nama'               => 'Nama',
+            'email'              => 'Email',
+            'ip'                 => 'IP',
+            'model'              => 'Model',
+            'label'              => 'Label',
+            'email_dicoba'       => 'Email Dicoba',
         ];
 
         $result = [];
@@ -88,6 +115,14 @@ class ActivityLog extends Model
             if ($value !== null && $value !== '') {
                 $result[$label] = $value;
             }
+        }
+
+        // Rincian per-barang untuk log Stock Opname yang digabung jadi 1
+        // baris per sesi finalisasi (lihat StockOpnameController::finalize()).
+        if (!empty($this->metadata['perubahan']) && is_array($this->metadata['perubahan'])) {
+            $result['Perubahan Stok'] = collect($this->metadata['perubahan'])
+                ->map(fn ($p) => "{$p['kode_aset']}: {$p['stok_lama']} → {$p['stok_baru']}")
+                ->implode('; ');
         }
 
         if (!empty($this->metadata['pengirim']['username'])) {

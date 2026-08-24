@@ -42,6 +42,7 @@ class StockOpnameController extends Controller
 
         abort_if($barangs->isEmpty(), Response::HTTP_BAD_REQUEST, 'Belum ada data barang untuk di-opname.');
 
+        \Log::info('jumlah barang', ['count' => $barangs->count(), 'ids' => $barangs->pluck('id')]);
         // Ambil stok hasil SO terakhir yang final, dipetakan per barang_id.
         $lastFinal = StockOpnameSession::where('status', 'finalized')
             ->latest('finalized_at')
@@ -131,14 +132,17 @@ class StockOpnameController extends Controller
 
         abort_unless($stockOpname->isDraft(), Response::HTTP_FORBIDDEN, 'Sesi SO sudah difinalisasi.');
 
-        // Terima input hasil SO yang mungkin dikirim bersama aksi finalisasi
-        // (agar nilai yang baru diketik ikut tersimpan walau belum "Simpan Draft").
-        $submitted = $request->validate([
+        // Terima input hasil SO (+ catatan) yang mungkin dikirim bersama aksi
+        // finalisasi (agar nilai yang baru diketik ikut tersimpan walau belum
+        // "Simpan Draft").
+        $data = $request->validate([
             'items'   => ['nullable', 'array'],
             'items.*' => ['nullable', 'integer', 'min:0'],
-        ])['items'] ?? [];
+            'catatan' => ['nullable', 'string', 'max:255'],
+        ]);
+        $submitted = $data['items'] ?? [];
 
-        DB::transaction(function () use ($stockOpname, $request, $submitted) {
+        DB::transaction(function () use ($stockOpname, $request, $submitted, $data) {
             // 1) Persist input terbaru ke item bila ada.
             if (!empty($submitted)) {
                 foreach ($stockOpname->items as $item) {
@@ -150,7 +154,12 @@ class StockOpnameController extends Controller
                 $stockOpname->refresh();
             }
 
-            // 2) Terapkan ke master + catat log.
+            // 2) Terapkan ke master. Perubahan tiap barang DIKUMPULKAN dulu ke
+            //    $perubahan, BUKAN langsung ditulis satu-satu ke activity log
+            //    seperti sebelumnya (dulu: 1 sesi SO isi 8 barang -> 8 baris
+            //    log "update", padahal ini 1 aktivitas: finalisasi SO).
+            $perubahan = [];
+
             foreach ($stockOpname->items as $item) {
                 if ($item->stok_so === null) {
                     continue;
@@ -174,25 +183,43 @@ class StockOpnameController extends Controller
                     'updated_by_id'   => (string) $request->user()->id,
                 ]);
 
-                ActivityLogger::log(
-                    loggableType: Barang::class,
-                    loggableId: $barang->id,
-                    action: 'stock_opname',
-                    fieldChanged: 'stok',
-                    oldValue: $stokLama,
-                    newValue: $stokBaru,
-                    metadata: [
-                        'kode_aset' => $barang->kode_aset,
-                        'nama_aset' => $barang->nama_aset,
-                        'kode_so'   => $stockOpname->kode_so,
-                        'oleh'      => $request->user()->name,
-                    ],
-                );
+                $perubahan[] = [
+                    'barang_id' => $barang->id,
+                    'kode_aset' => $barang->kode_aset,
+                    'nama_aset' => $barang->nama_aset,
+                    'stok_lama' => $stokLama,
+                    'stok_baru' => $stokBaru,
+                    'selisih'   => $stokBaru - $stokLama,
+                ];
             }
+
+            // 3) Catat SATU baris log untuk keseluruhan sesi finalisasi ini,
+            //    loggable-nya sesi SO itu sendiri (bukan per-Barang).
+            //
+            //    PENTING: oldValue/newValue SENGAJA TIDAK diisi array —
+            //    ActivityLogger::log() men-cast old/new value ke (string)
+            //    kalau tidak null, jadi mengirim array ke situ akan memicu
+            //    error "Array to string conversion". Rincian per-barang
+            //    ditaruh di metadata['perubahan'] saja, yang sudah dirender
+            //    rapi oleh ActivityLog::metadataList().
+            ActivityLogger::log(
+                loggableType: StockOpnameSession::class,
+                loggableId: (int) $stockOpname->id,
+                action: 'stock_opname',
+                fieldChanged: 'stok (multi barang)',
+                metadata: [
+                    'kode_so'        => $stockOpname->kode_so,
+                    'jumlah_barang'  => count($stockOpname->items),
+                    'jumlah_berubah' => count($perubahan),
+                    'perubahan'      => $perubahan,
+                    'oleh'           => $request->user()->name,
+                ],
+            );
 
             $stockOpname->update([
                 'status'       => 'finalized',
                 'finalized_at' => now(),
+                'catatan'      => $data['catatan'] ?? $stockOpname->catatan,
             ]);
         });
 

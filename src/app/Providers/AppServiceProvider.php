@@ -7,6 +7,9 @@ use App\Policies\BarangPolicy;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Auth\Events\{Login, Logout, Failed};
+use App\Listeners\LogAuthActivity;
+use Illuminate\Support\Facades\Event;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,6 +28,10 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Paginator::defaultView('vendor.pagination.custom');
+
+        Event::listen(Login::class, [LogAuthActivity::class, 'handleLogin']);
+        Event::listen(Logout::class, [LogAuthActivity::class, 'handleLogout']);
+        Event::listen(Failed::class, [LogAuthActivity::class, 'handleFailed']);
 
         // Saat di belakang Cloudflare Tunnel (APP_URL https), paksa semua URL
         // yang di-generate memakai https. Tanpa ini, @vite & asset() bisa

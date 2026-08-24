@@ -40,6 +40,12 @@ class ActivityLogController extends Controller
             ->orderBy('action')
             ->pluck('action');
 
+        if ($request->ajax()) {
+            return response()->json([
+                'html' => view('activity-logs.partials.results', compact('logs'))->render(),
+            ]);
+        }
+
         return view('activity-logs.index', compact('logs', 'actionOptions'));
     }
 }

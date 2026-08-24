@@ -11,7 +11,7 @@
         <div class="flex flex-col gap-2">
             <p class="text-sm font-medium text-brand-600">Audit</p>
             <h2 class="section-heading">Log Aktivitas</h2>
-            <p class="section-subtitle">Histori seluruh perubahan data barang, termasuk update stok otomatis dari n8n.</p>
+            <p class="section-subtitle">Histori seluruh aktivitas: perubahan data barang &amp; master, stock opname, login, termasuk update otomatis dari n8n.</p>
         </div>
     </x-slot>
 
@@ -19,7 +19,7 @@
         <div class="app-container">
             <div class="page-card">
                 <div class="border-b border-slate-200 px-6 py-5 sm:px-8">
-                    <form method="GET" class="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end">
+                    <form id="activity-filter-form" method="GET" class="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end">
                         <div class="col-span-1">
                             <label class="field-label">Sumber</label>
                             <select name="source" class="select-input py-2.5">
@@ -61,121 +61,114 @@
                     </form>
                 </div>
 
-                @if($logs->isEmpty())
-                <div class="empty-state m-6 sm:m-8">
-                    <svg data-lucide="inbox" class="h-6 w-6 text-slate-300"></svg>
-                    <h3 class="mt-4 text-lg font-semibold text-slate-900">Belum ada aktivitas tercatat</h3>
-                    <p class="mt-2 max-w-md text-sm leading-6 text-slate-500">Log akan muncul di sini setiap ada perubahan data barang dari web maupun dari workflow n8n.</p>
+                <div id="activity-logs-results">
+                    @include('activity-logs.partials.results')
                 </div>
-                @else
-
-                {{-- Desktop: tabel --}}
-                <div class="hidden table-scroll lg:block">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Waktu</th>
-                                <th>Item</th>
-                                <th>Aksi</th>
-                                <th>Sumber</th>
-                                <th>Aktor</th>
-                                <th>Field</th>
-                                <th>Sebelum</th>
-                                <th>Sesudah</th>
-                                <th>Detail</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($logs as $log)
-                            <tr>
-                                <td class="whitespace-nowrap">{{ $log->created_at->format('d M Y H:i') }}</td>
-                                <td>
-                                    @if($log->loggable)
-                                    <a href="{{ route('barangs.show', $log->loggable) }}" class="font-medium text-brand-700 hover:underline">
-                                        {{ $log->displayLabel() }}
-                                    </a>
-                                    @else
-                                    <span class="text-slate-500">{{ $log->displayLabel() }}</span>
-                                    @endif
-                                </td>
-                                <td><span class="badge">{{ ucfirst(str_replace('_', ' ', $log->action)) }}</span></td>
-                                <td>
-                                    <span class="badge {{ $log->source === 'n8n' ? 'badge-n8n' : ($log->source === 'system' ? 'badge-system' : 'badge-web') }}">
-                                        {{ strtoupper($log->source) }}
-                                    </span>
-                                </td>
-                                <td>{{ $log->actorLabel() }}</td>
-                                <td>{{ $log->field_changed ?? '-' }}</td>
-                                <td class="max-w-[160px] truncate" title="{{ $log->old_value }}">{{ $log->old_value ?? '-' }}</td>
-                                <td class="max-w-[160px] truncate" title="{{ $log->new_value }}">{{ $log->new_value ?? '-' }}</td>
-                                <td>
-                                    @php($metaList = $log->metadataList())
-                                    @if(!empty($metaList))
-                                    <details class="log-detail">
-                                        <summary>Lihat</summary>
-                                        <div class="log-detail-panel">
-                                            @foreach($metaList as $label => $value)
-                                            <div class="log-detail-row"><span>{{ $label }}</span><span>{{ $value }}</span></div>
-                                            @endforeach
-                                        </div>
-                                    </details>
-                                    @else
-                                    <span class="text-slate-400">-</span>
-                                    @endif
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-
-                {{-- Mobile / tablet kecil: kartu --}}
-                <div class="mobile-card-list p-4 lg:hidden">
-                    @foreach ($logs as $log)
-                    <div class="mobile-card">
-                        <div class="mobile-card-top">
-                            <span class="badge">{{ ucfirst(str_replace('_', ' ', $log->action)) }}</span>
-                            <span class="badge {{ $log->source === 'n8n' ? 'badge-n8n' : ($log->source === 'system' ? 'badge-system' : 'badge-web') }}">
-                                {{ strtoupper($log->source) }}
-                            </span>
-                        </div>
-
-                        <p class="mt-2 text-sm font-semibold text-slate-800">
-                            @if($log->loggable)
-                            <a href="{{ route('barangs.show', $log->loggable) }}" class="text-brand-700 hover:underline">{{ $log->displayLabel() }}</a>
-                            @else
-                            {{ $log->displayLabel() }}
-                            @endif
-                        </p>
-
-                        <div class="mobile-card-row"><span>Waktu</span><span>{{ $log->created_at->format('d M Y H:i') }}</span></div>
-                        <div class="mobile-card-row"><span>Aktor</span><span>{{ $log->actorLabel() }}</span></div>
-                        @if($log->field_changed)
-                        <div class="mobile-card-row"><span>Field</span><span>{{ $log->field_changed }}</span></div>
-                        <div class="mobile-card-row"><span>Sebelum</span><span>{{ $log->old_value ?? '-' }}</span></div>
-                        <div class="mobile-card-row"><span>Sesudah</span><span>{{ $log->new_value ?? '-' }}</span></div>
-                        @endif
-
-                        @php($metaList = $log->metadataList())
-                        @if(!empty($metaList))
-                        <details class="log-detail mt-3">
-                            <summary>Lihat detail lengkap</summary>
-                            <div class="log-detail-panel">
-                                @foreach($metaList as $label => $value)
-                                <div class="log-detail-row"><span>{{ $label }}</span><span>{{ $value }}</span></div>
-                                @endforeach
-                            </div>
-                        </details>
-                        @endif
-                    </div>
-                    @endforeach
-                </div>
-
-                <div class="border-t border-slate-200 px-6 py-4 sm:px-8">
-                    {{ $logs->links() }}
-                </div>
-                @endif
             </div>
         </div>
     </div>
+
+    {{-- Live filter: ganti dropdown/tanggal langsung fetch AJAX, tanpa klik "Filter"
+         dan tanpa reload halaman. Tombol Filter & Reset tetap kerja sebagai fallback. --}}
+    <script>
+    (function () {
+        const resultsEl = document.getElementById('activity-logs-results');
+        const form = document.getElementById('activity-filter-form');
+        if (!resultsEl || !form) return;
+
+        const baseUrl  = @json(route('activity-logs.index'));
+        const basePath = new URL(baseUrl, window.location.origin).pathname;
+        let debounceTimer = null;
+        let controller = null;
+
+        function formParams() {
+            const data = new FormData(form);
+            const params = {};
+            data.forEach(function (v, k) { if (v !== '') params[k] = v; });
+            return params;
+        }
+
+        function loadResults(params, pushState) {
+            if (controller) controller.abort();
+            controller = new AbortController();
+            resultsEl.classList.add('opacity-50', 'pointer-events-none');
+
+            axios.get(baseUrl, { params: params, signal: controller.signal })
+                .then(function (res) {
+                    resultsEl.innerHTML = res.data.html;
+                    resultsEl.classList.remove('opacity-50', 'pointer-events-none');
+                    if (pushState !== false) {
+                        const url = new URL(baseUrl, window.location.origin);
+                        Object.keys(params).forEach(function (k) { if (params[k] !== '' && params[k] != null) url.searchParams.set(k, params[k]); });
+                        window.history.pushState({ params: params }, '', url.toString());
+                    }
+                    if (window.lucide) window.lucide.createIcons();
+                })
+                .catch(function (err) {
+                    if (axios.isCancel(err)) return;
+                    resultsEl.classList.remove('opacity-50', 'pointer-events-none');
+                    console.error('Live filter gagal:', err);
+                });
+        }
+
+        // Dropdown (source, aksi) → langsung. Tanggal → sedikit debounce
+        // (jaga-jaga kalau user klik tanggal beberapa kali sebelum yakin).
+        form.querySelectorAll('select').forEach(function (el) {
+            el.addEventListener('change', function () { loadResults(formParams()); });
+        });
+        form.querySelectorAll('input[type="date"]').forEach(function (el) {
+            el.addEventListener('change', function () {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(function () { loadResults(formParams()); }, 300);
+            });
+        });
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            clearTimeout(debounceTimer);
+            loadResults(formParams());
+        });
+
+        // Tombol Reset (kalau ada) & pagination di dalam hasil → AJAX juga.
+        document.addEventListener('click', function (e) {
+            const link = e.target.closest('a[href]');
+            if (!link) return;
+            const url = new URL(link.href, window.location.origin);
+            if (url.pathname !== basePath) return;
+            if (!form.contains(link) && !resultsEl.contains(link)) return;
+            e.preventDefault();
+            const params = {
+                source: url.searchParams.get('source') || '',
+                action: url.searchParams.get('action') || '',
+                date_from: url.searchParams.get('date_from') || '',
+                date_to: url.searchParams.get('date_to') || '',
+                page: url.searchParams.get('page') || undefined,
+            };
+            const sourceSel = form.querySelector('[name="source"]');
+            const actionSel = form.querySelector('[name="action"]');
+            const fromInput = form.querySelector('[name="date_from"]');
+            const toInput   = form.querySelector('[name="date_to"]');
+            if (sourceSel) sourceSel.value = params.source;
+            if (actionSel) actionSel.value = params.action;
+            if (fromInput) fromInput.value = params.date_from;
+            if (toInput) toInput.value = params.date_to;
+            loadResults(params);
+        });
+
+        window.addEventListener('popstate', function (e) {
+            if (e.state && e.state.params) {
+                const p = e.state.params;
+                const sourceSel = form.querySelector('[name="source"]');
+                const actionSel = form.querySelector('[name="action"]');
+                const fromInput = form.querySelector('[name="date_from"]');
+                const toInput   = form.querySelector('[name="date_to"]');
+                if (sourceSel) sourceSel.value = p.source || '';
+                if (actionSel) actionSel.value = p.action || '';
+                if (fromInput) fromInput.value = p.date_from || '';
+                if (toInput) toInput.value = p.date_to || '';
+                loadResults(p, false);
+            }
+        });
+    })();
+    </script>
 </x-app-layout>

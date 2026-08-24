@@ -39,7 +39,6 @@
                 <span>Sesi ini sudah difinalisasi pada {{ $session->finalized_at->format('d M Y H:i') }}. Data bersifat read-only untuk keperluan audit.</span>
             </div>
             @endif
-
             <form method="POST"
                 action="{{ route('stock-opname.update', $session) }}"
                 id="soFormEl">
@@ -87,7 +86,8 @@
                                             name="items[{{ $item->id }}]"
                                             value="{{ $item->stok_so }}"
                                             x-model.number="so"
-                                            class="w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-right text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100">
+                                            :disabled="!isDesktop"
+                                            class="w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-right text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-0 disabled:pointer-events-none">
                                         @else
                                         {{ $item->stok_so === null ? '—' : number_format($item->stok_so) }}
                                         @endif
@@ -141,7 +141,8 @@
                                         name="items[{{ $item->id }}]"
                                         value="{{ $item->stok_so }}"
                                         x-model.number="so"
-                                        class="w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-right text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100">
+                                        :disabled="isDesktop"
+                                        class="w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-right text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-0 disabled:pointer-events-none">
                                     @else
                                     {{ $item->stok_so === null ? '—' : number_format($item->stok_so) }}
                                     @endif
@@ -167,34 +168,39 @@
                         @endforeach
                     </div>
                 </div>
+            </form>
 
-                @if($session->isDraft())
-                <div class="page-card mt-6 p-6 sm:p-8">
-                    <label class="field-label" for="catatan">Catatan (opsional)</label>
-                    <textarea id="catatan" name="catatan" rows="2" class="select-input" placeholder="Catatan sesi opname ini...">{{ $session->catatan }}</textarea>
+            @if($session->isDraft())
+            <div class="page-card mt-6 p-6 sm:p-8">
+                <label class="field-label" for="catatan">Catatan (opsional)</label>
+                {{-- form="soFormEl" menghubungkan textarea ini kembali ke form di
+                     atas walau posisinya sekarang di luar tag <form> --}}
+                <textarea id="catatan" name="catatan" form="soFormEl" rows="2" class="select-input" placeholder="Catatan sesi opname ini...">{{ $session->catatan }}</textarea>
 
-                    <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <form method="POST" action="{{ route('stock-opname.destroy', $session) }}"
-                            onsubmit="return confirmDelete(this, '{{ $session->kode_so }}')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn-danger">
-                                <svg data-lucide="trash-2"></svg> Batalkan Draft
-                            </button>
-                        </form>
+                <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    {{-- Form "Batalkan Draft" sekarang jadi sibling, BUKAN nested --}}
+                    <form method="POST" action="{{ route('stock-opname.destroy', $session) }}"
+                        onsubmit="return confirmDelete(this, '{{ $session->kode_so }}')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn-danger">
+                            <svg data-lucide="trash-2"></svg> Batalkan Draft
+                        </button>
+                    </form>
 
-                        <div class="flex flex-col-reverse gap-3 sm:flex-row">
-                            <button type="submit" class="btn-secondary">
-                                <svg data-lucide="save"></svg> Simpan Draft
-                            </button>
-                            <button type="button" class="btn-success" @click="finalize()">
-                                <svg data-lucide="check-circle"></svg> Finalisasi &amp; Update Master
-                            </button>
-                        </div>
+                    <div class="flex flex-col-reverse gap-3 sm:flex-row">
+                        {{-- form="soFormEl" supaya tombol ini tetap submit form
+                             utama walau secara DOM sudah tidak nested lagi --}}
+                        <button type="submit" form="soFormEl" class="btn-secondary">
+                            <svg data-lucide="save"></svg> Simpan Draft
+                        </button>
+                        <button type="button" class="btn-success" @click="finalize()">
+                            <svg data-lucide="check-circle"></svg> Finalisasi &amp; Update Master
+                        </button>
                     </div>
                 </div>
-                @endif
-            </form>
+            </div>
+            @endif
 
             {{-- Form tersembunyi untuk finalisasi --}}
             @if($session->isDraft())
@@ -206,11 +212,32 @@
     </div>
 
     <script>
+        function forceSwalButtonsVisible() {
+            const confirmBtn = Swal.getConfirmButton();
+            const cancelBtn = Swal.getCancelButton();
+            [confirmBtn, cancelBtn].forEach((btn) => {
+                if (!btn) return;
+                btn.style.setProperty('display', 'inline-block', 'important');
+                btn.style.setProperty('visibility', 'visible', 'important');
+                btn.style.setProperty('opacity', '1', 'important');
+            });
+        }
+
         function soForm(isDraft) {
             return {
                 isDraft,
+                isDesktop: window.matchMedia('(min-width: 1024px)').matches,
+                init() {
+                    const mq = window.matchMedia('(min-width: 1024px)');
+                    const sync = (e) => { this.isDesktop = e.matches; };
+                    if (mq.addEventListener) {
+                        mq.addEventListener('change', sync);
+                    } else {
+                        // fallback browser lama
+                        mq.addListener(sync);
+                    }
+                },
                 finalize() {
-                    // Simpan dulu input terkini, lalu finalisasi.
                     Swal.fire({
                         title: 'Finalisasi Stock Opname?',
                         html: 'Stok di <strong>Master Barang</strong> akan diperbarui dengan nilai Hasil SO.<br>Tindakan ini <strong>tidak bisa dibatalkan</strong>.',
@@ -222,24 +249,79 @@
                         cancelButtonColor: '#64748b',
                         reverseButtons: true,
                         customClass: { popup: 'rounded-2xl' },
+                        didOpen: () => {
+                        const confirmBtn = Swal.getConfirmButton();
+                        const cancelBtn = Swal.getCancelButton();
+                        [[confirmBtn, '#4f46e5'], [cancelBtn, '#64748b']].forEach(([btn, color]) => {
+                            if (!btn) return;
+                            btn.style.setProperty('background-color', color, 'important');
+                            btn.style.setProperty('color', '#ffffff', 'important');
+                            btn.style.setProperty('display', 'inline-block', 'important');
+                            btn.style.setProperty('visibility', 'visible', 'important');
+                            btn.style.setProperty('opacity', '1', 'important');
+                        });
+                    },
                     }).then((r) => {
                         if (!r.isConfirmed) return;
-                        // Kirim input hasil SO lewat form utama dulu (simpan draft),
-                        // baru submit form finalisasi. Agar sederhana & andal,
-                        // kita salin input ke form finalisasi.
                         const main = document.getElementById('soFormEl');
                         const fin = document.getElementById('finalizeForm');
-                        main.querySelectorAll('input[name^="items"], textarea[name="catatan"]').forEach((el) => {
-                            const clone = el.cloneNode(true);
+                        const catatanEl = document.getElementById('catatan');
+
+                        main.querySelectorAll('input[name^="items"]:not(:disabled)').forEach((el) => {
+                            const clone = document.createElement('input');
                             clone.type = 'hidden';
-                            clone.value = el.value;
                             clone.name = el.name;
+                            clone.value = el.value;
                             fin.appendChild(clone);
                         });
+
+                        if (catatanEl) {
+                            const clone = document.createElement('input');
+                            clone.type = 'hidden';
+                            clone.name = 'catatan';
+                            clone.value = catatanEl.value;
+                            fin.appendChild(clone);
+                        }
+
                         fin.submit();
                     });
                 }
             };
+        }
+
+        function confirmDelete(form, kode) {
+            Swal.fire({
+                title: `Batalkan draft ${kode}?`,
+                html: 'Draft Stock Opname ini akan <strong>dihapus permanen</strong> dan tidak bisa dikembalikan.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, batalkan',
+                cancelButtonText: 'Tidak',
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#64748b',
+                reverseButtons: true,
+                focusCancel: true,
+                customClass: { popup: 'rounded-2xl' },
+                didOpen: () => {
+                const confirmBtn = Swal.getConfirmButton();
+                const cancelBtn = Swal.getCancelButton();
+                [[confirmBtn, '#4f46e5'], [cancelBtn, '#64748b']].forEach(([btn, color]) => {
+                    if (!btn) return;
+                    btn.style.setProperty('background-color', color, 'important');
+                    btn.style.setProperty('color', '#ffffff', 'important');
+                    btn.style.setProperty('display', 'inline-block', 'important');
+                    btn.style.setProperty('visibility', 'visible', 'important');
+                    btn.style.setProperty('opacity', '1', 'important');
+                });
+            },
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+
+            // WAJIB: hentikan submit bawaan browser sampai user konfirmasi
+            return false;
         }
     </script>
 </x-app-layout>

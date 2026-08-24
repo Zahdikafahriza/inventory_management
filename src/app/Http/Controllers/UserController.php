@@ -31,6 +31,12 @@ class UserController extends Controller
             ->paginate(15)
             ->withQueryString();
 
+        if ($request->ajax()) {
+            return response()->json([
+                'html' => view('users.partials.results', compact('users'))->render(),
+            ]);
+        }
+
         return view('users.index', compact('users', 'search'));
     }
 

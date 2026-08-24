@@ -33,7 +33,7 @@
                     <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div>
                             <h3 class="text-lg font-semibold text-slate-900">Daftar {{ $config['label_plural'] }}</h3>
-                            <p class="mt-1 text-sm text-slate-500">Total {{ number_format($items->total()) }} data tersimpan.</p>
+                            <p class="mt-1 text-sm text-slate-500">Total <span id="master-total-count">{{ number_format($items->total()) }}</span> data tersimpan.</p>
                         </div>
                         <span class="badge">
                             <svg data-lucide="{{ $config['icon'] }}"></svg>
@@ -41,10 +41,10 @@
                         </span>
                     </div>
 
-                    <form method="GET" class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <form id="master-search-form" method="GET" class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
                         <label class="topbar-search sm:max-w-md">
                             <svg data-lucide="search" class="h-4 w-4 shrink-0 text-slate-400"></svg>
-                            <input type="text" name="q" value="{{ $search }}"
+                            <input id="master-search-input" type="text" name="q" value="{{ $search }}" autocomplete="off"
                                 placeholder="Cari {{ strtolower($config['label']) }}..."
                                 class="w-full bg-transparent text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none">
                         </label>
@@ -63,113 +63,79 @@
                     </form>
                 </div>
 
-                <div class="p-6 sm:p-8">
-                    @if($items->isEmpty())
-                    <div class="empty-state">
-                        <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
-                            <svg data-lucide="{{ $config['icon'] }}" class="h-8 w-8"></svg>
-                        </div>
-                        @if($search !== '')
-                        <h3 class="mt-5 text-lg font-semibold text-slate-900">Tidak ada data yang cocok</h3>
-                        <p class="mt-2 max-w-md text-sm leading-6 text-slate-500">Coba kata kunci lain atau reset pencarian.</p>
-                        <a href="{{ route('master.index', $config['type']) }}" class="btn-primary mt-6">
-                            <svg data-lucide="rotate-ccw"></svg> Reset Pencarian
-                        </a>
-                        @else
-                        <h3 class="mt-5 text-lg font-semibold text-slate-900">Belum ada data {{ strtolower($config['label']) }}</h3>
-                        <p class="mt-2 max-w-md text-sm leading-6 text-slate-500">Tambahkan pilihan pertama agar muncul di form barang.</p>
-                        @if(auth()->user()->can('create master_reference'))
-                        <a href="{{ route('master.create', $config['type']) }}" class="btn-primary mt-6">
-                            <svg data-lucide="plus"></svg> Tambah {{ $config['label'] }}
-                        </a>
-                        @endif
-                        @endif
-                    </div>
-                    @else
-
-                    {{-- Desktop tabel --}}
-                    <div class="hidden table-wrap sm:block">
-                        <div class="table-scroll">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th class="w-16">No</th>
-                                        <th>Nama</th>
-                                        <th>Status</th>
-                                        <th class="text-right">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($items as $item)
-                                    <tr>
-                                        <td>{{ $items->firstItem() + $loop->index }}</td>
-                                        <td class="font-medium text-slate-800">{{ $item->nama }}</td>
-                                        <td>
-                                            @if($item->is_active)
-                                            <span class="badge badge-success">Aktif</span>
-                                            @else
-                                            <span class="badge badge-neutral">Nonaktif</span>
-                                            @endif
-                                        </td>
-                                        <td class="text-right whitespace-nowrap">
-                                            @if(auth()->user()->can('create master_reference'))
-                                            <div class="inline-flex items-center gap-1.5">
-                                                <a href="{{ route('master.edit', [$config['type'], $item->id]) }}" class="btn-ghost btn-sm text-brand-600 hover:bg-brand-50" title="Edit">
-                                                    <svg data-lucide="pencil"></svg>
-                                                </a>
-                                                <form action="{{ route('master.destroy', [$config['type'], $item->id]) }}" method="POST"
-                                                    onsubmit="return confirmDelete(this, {{ Js::from($item->nama) }})">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn-ghost btn-sm text-red-600 hover:bg-red-50" title="Hapus">
-                                                        <svg data-lucide="trash-2"></svg>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                            @else
-                                            <span class="text-xs text-slate-400">—</span>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    {{-- Mobile kartu --}}
-                    <div class="mobile-card-list sm:hidden">
-                        @foreach($items as $item)
-                        <div class="mobile-card">
-                            <div class="mobile-card-top">
-                                <span class="text-base font-semibold text-slate-800">{{ $item->nama }}</span>
-                                @if($item->is_active)
-                                <span class="badge badge-success">Aktif</span>
-                                @else
-                                <span class="badge badge-neutral">Nonaktif</span>
-                                @endif
-                            </div>
-                            @if(auth()->user()->can('create master_reference'))
-                            <div class="mobile-card-actions">
-                                <a href="{{ route('master.edit', [$config['type'], $item->id]) }}" class="mobile-card-btn mobile-card-btn-primary">Edit</a>
-                                <form action="{{ route('master.destroy', [$config['type'], $item->id]) }}" method="POST"
-                                    onsubmit="return confirmDelete(this, {{ Js::from($item->nama) }})">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="mobile-card-btn mobile-card-btn-danger">Hapus</button>
-                                </form>
-                            </div>
-                            @endif
-                        </div>
-                        @endforeach
-                    </div>
-
-                    <div class="mt-6 border-t border-slate-100 pt-6">
-                        {{ $items->links() }}
-                    </div>
-                    @endif
+                <div id="master-results" class="p-6 sm:p-8">
+                    @include('master.partials.results')
                 </div>
             </div>
         </div>
     </div>
+
+    <script>
+    (function () {
+        const resultsEl = document.getElementById('master-results');
+        const form  = document.getElementById('master-search-form');
+        const input = document.getElementById('master-search-input');
+        const totalEl = document.getElementById('master-total-count');
+        if (!resultsEl || !form || !input) return;
+
+        const baseUrl  = @json(route('master.index', $config['type']));
+        const basePath = new URL(baseUrl, window.location.origin).pathname;
+        let debounceTimer = null;
+        let controller = null;
+
+        function loadResults(params, pushState) {
+            if (controller) controller.abort();
+            controller = new AbortController();
+            resultsEl.classList.add('opacity-50', 'pointer-events-none');
+
+            axios.get(baseUrl, { params: params, signal: controller.signal })
+                .then(function (res) {
+                    resultsEl.innerHTML = res.data.html;
+                    resultsEl.classList.remove('opacity-50', 'pointer-events-none');
+                    if (totalEl) totalEl.textContent = Number(res.data.total || 0).toLocaleString('id-ID');
+                    if (pushState !== false) {
+                        const url = new URL(baseUrl, window.location.origin);
+                        Object.keys(params).forEach(function (k) { if (params[k] !== '' && params[k] != null) url.searchParams.set(k, params[k]); });
+                        window.history.pushState({ params: params }, '', url.toString());
+                    }
+                    if (window.lucide) window.lucide.createIcons();
+                })
+                .catch(function (err) {
+                    if (axios.isCancel(err)) return;
+                    resultsEl.classList.remove('opacity-50', 'pointer-events-none');
+                    console.error('Live search gagal:', err);
+                });
+        }
+
+        input.addEventListener('input', function () {
+            clearTimeout(debounceTimer);
+            const q = input.value;
+            debounceTimer = setTimeout(function () { loadResults({ q: q }); }, 350);
+        });
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            clearTimeout(debounceTimer);
+            loadResults({ q: input.value });
+        });
+
+        resultsEl.addEventListener('click', function (e) {
+            const link = e.target.closest('a[href]');
+            if (!link) return;
+            const url = new URL(link.href, window.location.origin);
+            if (url.pathname !== basePath) return;
+            e.preventDefault();
+            const params = { q: url.searchParams.get('q') || '', page: url.searchParams.get('page') || undefined };
+            input.value = params.q;
+            loadResults(params);
+        });
+
+        window.addEventListener('popstate', function (e) {
+            if (e.state && e.state.params) {
+                input.value = e.state.params.q || '';
+                loadResults(e.state.params, false);
+            }
+        });
+    })();
+    </script>
 </x-app-layout>

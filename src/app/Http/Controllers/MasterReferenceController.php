@@ -50,6 +50,13 @@ class MasterReferenceController extends Controller
 
         $items = $query->paginate(15)->withQueryString();
 
+        if ($request->ajax()) {
+            return response()->json([
+                'html'  => view('master.partials.results', compact('config', 'items', 'search'))->render(),
+                'total' => $items->total(),
+            ]);
+        }
+
         return view('master.index', compact('config', 'items', 'search'));
     }
 
