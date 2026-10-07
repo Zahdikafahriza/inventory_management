@@ -121,7 +121,13 @@ class ActivityLog extends Model
         // baris per sesi finalisasi (lihat StockOpnameController::finalize()).
         if (!empty($this->metadata['perubahan']) && is_array($this->metadata['perubahan'])) {
             $result['Perubahan Stok'] = collect($this->metadata['perubahan'])
-                ->map(fn ($p) => "{$p['kode_aset']}: {$p['stok_lama']} → {$p['stok_baru']}")
+                ->map(function ($p) {
+                    $line = "{$p['kode_aset']}: {$p['stok_lama']} → {$p['stok_baru']}";
+                    if (!empty($p['keterangan'])) {
+                        $line .= " ({$p['keterangan']})";
+                    }
+                    return $line;
+                })
                 ->implode('; ');
         }
 

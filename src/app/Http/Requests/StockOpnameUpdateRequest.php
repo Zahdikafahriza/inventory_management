@@ -18,6 +18,10 @@ class StockOpnameUpdateRequest extends FormRequest
             'items'          => ['required', 'array'],
             // Setiap nilai hasil SO: boleh kosong (belum dihitung) atau integer >= 0.
             'items.*'        => ['nullable', 'integer', 'min:0'],
+            // Keterangan per item (opsional), dikirim terpisah dari items[]
+            // karena tipe datanya beda (teks bebas, bukan angka).
+            'keterangan'     => ['nullable', 'array'],
+            'keterangan.*'   => ['nullable', 'string', 'max:255'],
         ];
     }
 

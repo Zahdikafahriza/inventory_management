@@ -114,6 +114,10 @@ docker-compose.local.yml
 
 *.sqlite
 database/*.sqlite
+*.sql
+
+# Cloudflared tunnel credentials
+/cloudflared/
 
 # ==========================================
 # BACKUP

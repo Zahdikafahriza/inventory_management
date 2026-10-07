@@ -3,19 +3,17 @@
         <nav class="breadcrumb">
             <a href="{{ route('dashboard') }}">Dashboard</a>
             <svg data-lucide="chevron-right" class="h-3.5 w-3.5 text-slate-300"></svg>
-            <span class="is-current">Log Aktivitas</span>
+            <a href="{{ route('activity-logs.index') }}">Log Aktivitas</a>
+            <svg data-lucide="chevron-right" class="h-3.5 w-3.5 text-slate-300"></svg>
+            <span class="is-current">Aktivitas Login</span>
         </nav>
     </x-slot>
 
     <x-slot name="header">
         <div class="flex flex-col gap-2">
             <p class="text-sm font-medium text-brand-600">Audit</p>
-            <h2 class="section-heading">Log Aktivitas</h2>
-            <p class="section-subtitle">Histori seluruh aktivitas: perubahan data barang &amp; master, stock opname, login, termasuk update otomatis dari n8n.</p>
-            <a href="{{ route('activity-logs.login') }}" class="mt-1 inline-flex w-fit items-center gap-1.5 text-sm font-medium text-brand-600 hover:underline">
-                <svg data-lucide="log-in" class="h-4 w-4"></svg>
-                Lihat aktivitas login web
-            </a>
+            <h2 class="section-heading">Aktivitas Login Web</h2>
+            <p class="section-subtitle">Histori login, logout, dan percobaan login gagal lewat aplikasi web.</p>
         </div>
     </x-slot>
 
@@ -24,22 +22,17 @@
             <div class="page-card">
                 <div class="border-b border-slate-200 px-6 py-5 sm:px-8">
                     <form id="activity-filter-form" method="GET" class="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end">
-                        <div class="col-span-1">
-                            <label class="field-label">Sumber</label>
-                            <select name="source" class="select-input py-2.5">
-                                <option value="">Semua</option>
-                                <option value="web" @selected(request('source') === 'web')>Web</option>
-                                <option value="n8n" @selected(request('source') === 'n8n')>n8n</option>
-                                <option value="system" @selected(request('source') === 'system')>System</option>
-                            </select>
+                        <div class="col-span-2 sm:col-span-1 sm:min-w-[200px]">
+                            <label class="field-label">Cari nama / email</label>
+                            <input type="text" name="q" value="{{ request('q') }}" placeholder="nama atau email" class="select-input py-2.5">
                         </div>
                         <div class="col-span-1">
                             <label class="field-label">Aksi</label>
                             <select name="action" class="select-input py-2.5">
                                 <option value="">Semua</option>
-                                @foreach($actionOptions as $opt)
-                                <option value="{{ $opt }}" @selected(request('action') === $opt)>{{ ucfirst(str_replace('_', ' ', $opt)) }}</option>
-                                @endforeach
+                                <option value="login" @selected(request('action') === 'login')>Login</option>
+                                <option value="logout" @selected(request('action') === 'logout')>Logout</option>
+                                <option value="login_failed" @selected(request('action') === 'login_failed')>Login gagal</option>
                             </select>
                         </div>
                         <div class="col-span-1">
@@ -55,8 +48,8 @@
                                 <svg data-lucide="filter"></svg>
                                 Filter
                             </button>
-                            @if(request()->anyFilled(['source', 'action', 'date_from', 'date_to']))
-                            <a href="{{ route('activity-logs.index') }}" class="btn-secondary w-full sm:w-auto">
+                            @if(request()->anyFilled(['q', 'action', 'date_from', 'date_to']))
+                            <a href="{{ route('activity-logs.login') }}" class="btn-secondary w-full sm:w-auto">
                                 <svg data-lucide="x"></svg>
                                 Reset
                             </a>
@@ -72,15 +65,13 @@
         </div>
     </div>
 
-    {{-- Live filter: ganti dropdown/tanggal langsung fetch AJAX, tanpa klik "Filter"
-         dan tanpa reload halaman. Tombol Filter & Reset tetap kerja sebagai fallback. --}}
     <script>
     (function () {
         const resultsEl = document.getElementById('activity-logs-results');
         const form = document.getElementById('activity-filter-form');
         if (!resultsEl || !form) return;
 
-        const baseUrl  = @json(route('activity-logs.index'));
+        const baseUrl  = @json(route('activity-logs.login'));
         const basePath = new URL(baseUrl, window.location.origin).pathname;
         let debounceTimer = null;
         let controller = null;
@@ -115,8 +106,6 @@
                 });
         }
 
-        // Dropdown (source, aksi) → langsung. Tanggal → sedikit debounce
-        // (jaga-jaga kalau user klik tanggal beberapa kali sebelum yakin).
         form.querySelectorAll('select').forEach(function (el) {
             el.addEventListener('change', function () { loadResults(formParams()); });
         });
@@ -126,6 +115,12 @@
                 debounceTimer = setTimeout(function () { loadResults(formParams()); }, 300);
             });
         });
+        form.querySelectorAll('input[type="text"]').forEach(function (el) {
+            el.addEventListener('input', function () {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(function () { loadResults(formParams()); }, 400);
+            });
+        });
 
         form.addEventListener('submit', function (e) {
             e.preventDefault();
@@ -133,7 +128,6 @@
             loadResults(formParams());
         });
 
-        // Tombol Reset (kalau ada) & pagination di dalam hasil → AJAX juga.
         document.addEventListener('click', function (e) {
             const link = e.target.closest('a[href]');
             if (!link) return;
@@ -142,17 +136,17 @@
             if (!form.contains(link) && !resultsEl.contains(link)) return;
             e.preventDefault();
             const params = {
-                source: url.searchParams.get('source') || '',
+                q: url.searchParams.get('q') || '',
                 action: url.searchParams.get('action') || '',
                 date_from: url.searchParams.get('date_from') || '',
                 date_to: url.searchParams.get('date_to') || '',
                 page: url.searchParams.get('page') || undefined,
             };
-            const sourceSel = form.querySelector('[name="source"]');
+            const qInput    = form.querySelector('[name="q"]');
             const actionSel = form.querySelector('[name="action"]');
             const fromInput = form.querySelector('[name="date_from"]');
             const toInput   = form.querySelector('[name="date_to"]');
-            if (sourceSel) sourceSel.value = params.source;
+            if (qInput) qInput.value = params.q;
             if (actionSel) actionSel.value = params.action;
             if (fromInput) fromInput.value = params.date_from;
             if (toInput) toInput.value = params.date_to;
@@ -162,11 +156,11 @@
         window.addEventListener('popstate', function (e) {
             if (e.state && e.state.params) {
                 const p = e.state.params;
-                const sourceSel = form.querySelector('[name="source"]');
+                const qInput    = form.querySelector('[name="q"]');
                 const actionSel = form.querySelector('[name="action"]');
                 const fromInput = form.querySelector('[name="date_from"]');
                 const toInput   = form.querySelector('[name="date_to"]');
-                if (sourceSel) sourceSel.value = p.source || '';
+                if (qInput) qInput.value = p.q || '';
                 if (actionSel) actionSel.value = p.action || '';
                 if (fromInput) fromInput.value = p.date_from || '';
                 if (toInput) toInput.value = p.date_to || '';

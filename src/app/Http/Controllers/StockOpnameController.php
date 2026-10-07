@@ -74,6 +74,7 @@ class StockOpnameController extends Controller
                     'stok_bulan_lalu' => $stokBulanLalu[$barang->id] ?? null,
                     'stok_sistem'     => (int) $barang->stok,
                     'stok_so'         => null,
+                    'keterangan'      => null,
                     'created_at'      => $now,
                     'updated_at'      => $now,
                 ];
@@ -107,12 +108,23 @@ class StockOpnameController extends Controller
     {
         abort_unless($stockOpname->isDraft(), Response::HTTP_FORBIDDEN, 'Sesi SO sudah difinalisasi.');
 
-        $inputs = $request->validated()['items'] ?? [];
+        $inputs      = $request->validated()['items'] ?? [];
+        $keterangans = $request->validated()['keterangan'] ?? [];
 
-        DB::transaction(function () use ($stockOpname, $inputs, $request) {
+        DB::transaction(function () use ($stockOpname, $inputs, $keterangans, $request) {
             foreach ($stockOpname->items as $item) {
+                $update = [];
+
                 if (array_key_exists($item->id, $inputs)) {
-                    $item->update(['stok_so' => $inputs[$item->id]]);
+                    $update['stok_so'] = $inputs[$item->id];
+                }
+
+                if (array_key_exists($item->id, $keterangans)) {
+                    $update['keterangan'] = $keterangans[$item->id] !== '' ? $keterangans[$item->id] : null;
+                }
+
+                if (!empty($update)) {
+                    $item->update($update);
                 }
             }
             $stockOpname->update(['catatan' => $request->validated()['catatan'] ?? null]);
@@ -136,19 +148,31 @@ class StockOpnameController extends Controller
         // finalisasi (agar nilai yang baru diketik ikut tersimpan walau belum
         // "Simpan Draft").
         $data = $request->validate([
-            'items'   => ['nullable', 'array'],
-            'items.*' => ['nullable', 'integer', 'min:0'],
-            'catatan' => ['nullable', 'string', 'max:255'],
+            'items'        => ['nullable', 'array'],
+            'items.*'      => ['nullable', 'integer', 'min:0'],
+            'keterangan'   => ['nullable', 'array'],
+            'keterangan.*' => ['nullable', 'string', 'max:255'],
+            'catatan'      => ['nullable', 'string', 'max:255'],
         ]);
-        $submitted = $data['items'] ?? [];
+        $submitted           = $data['items'] ?? [];
+        $submittedKeterangan = $data['keterangan'] ?? [];
 
-        DB::transaction(function () use ($stockOpname, $request, $submitted, $data) {
+        DB::transaction(function () use ($stockOpname, $request, $submitted, $submittedKeterangan, $data) {
             // 1) Persist input terbaru ke item bila ada.
-            if (!empty($submitted)) {
+            if (!empty($submitted) || !empty($submittedKeterangan)) {
                 foreach ($stockOpname->items as $item) {
+                    $update = [];
+
                     if (array_key_exists($item->id, $submitted)) {
-                        $item->stok_so = $submitted[$item->id];
-                        $item->save();
+                        $update['stok_so'] = $submitted[$item->id];
+                    }
+
+                    if (array_key_exists($item->id, $submittedKeterangan)) {
+                        $update['keterangan'] = $submittedKeterangan[$item->id] !== '' ? $submittedKeterangan[$item->id] : null;
+                    }
+
+                    if (!empty($update)) {
+                        $item->update($update);
                     }
                 }
                 $stockOpname->refresh();
@@ -184,12 +208,13 @@ class StockOpnameController extends Controller
                 ]);
 
                 $perubahan[] = [
-                    'barang_id' => $barang->id,
-                    'kode_aset' => $barang->kode_aset,
-                    'nama_aset' => $barang->nama_aset,
-                    'stok_lama' => $stokLama,
-                    'stok_baru' => $stokBaru,
-                    'selisih'   => $stokBaru - $stokLama,
+                    'barang_id'  => $barang->id,
+                    'kode_aset'  => $barang->kode_aset,
+                    'nama_aset'  => $barang->nama_aset,
+                    'stok_lama'  => $stokLama,
+                    'stok_baru'  => $stokBaru,
+                    'selisih'    => $stokBaru - $stokLama,
+                    'keterangan' => $item->keterangan,
                 ];
             }
 

@@ -15,6 +15,7 @@ class StockOpnameItem extends Model
         'stok_bulan_lalu',
         'stok_sistem',
         'stok_so',
+        'keterangan',
     ];
 
     protected $casts = [

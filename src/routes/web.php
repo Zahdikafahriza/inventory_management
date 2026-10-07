@@ -45,6 +45,7 @@ Route::middleware('auth')->group(function () {
 
     // Log aktivitas — READ ONLY, sengaja tidak ada route store/update/destroy.
     Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+    Route::get('/activity-logs/login', [ActivityLogController::class, 'login'])->name('activity-logs.login');
 
     // Master Referensi — CRUD generik untuk 8 jenis data referensi.
     // {type} = kategori | sub-kategori | merk | tipe-spek | satuan | kondisi | status | lokasi

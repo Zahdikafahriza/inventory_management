@@ -25,6 +25,18 @@ services:
     networks:
       - inventory-net
 
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: inventory_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: mysql-dbas-jkt-001.sumobase.my.id
+      PMA_PORT: 63306
+    networks:
+      - inventory-net
+
 networks:
   inventory-net:
     driver: bridge

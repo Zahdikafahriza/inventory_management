@@ -14,20 +14,6 @@
         {{ $breadcrumb ?? '' }}
     </div>
 
-    {{-- Search (desktop) --}}
-    <div class="hidden flex-1 justify-center md:flex lg:flex-none">
-        <label class="topbar-search">
-            <svg data-lucide="search" class="h-4 w-4 shrink-0 text-slate-400"></svg>
-            <input
-                type="text"
-                placeholder="Cari barang, kode aset..."
-                class="w-full bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
-                onkeydown="if(event.key==='Enter'){window.location.href='{{ route('barangs.index') }}?q='+encodeURIComponent(this.value)}"
-            >
-            <kbd class="hidden rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 lg:inline-block">/</kbd>
-        </label>
-    </div>
-
     <div class="ml-auto flex items-center gap-1.5 sm:gap-2">
         {{-- Notifikasi --}}
         <div class="relative" x-data="{ open: false }" @click.outside="open = false">

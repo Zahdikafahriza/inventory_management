@@ -31,7 +31,7 @@
 
     <div class="page-section">
         <div class="app-container space-y-6"
-            x-data="soForm({{ $session->isDraft() ? 'true' : 'false' }})">
+            x-data="soForm({{ $session->isDraft() ? 'true' : 'false' }}, {{ $items->whereNotNull('stok_so')->count() }})">
 
             @if($session->isFinalized())
             <div class="alert-success">
@@ -52,11 +52,11 @@
                                 <h3 class="text-lg font-semibold text-slate-900">Perbandingan Stok</h3>
                                 <p class="mt-1 text-sm text-slate-500">Isi kolom <strong>Hasil SO</strong> dengan jumlah fisik hasil hitung.</p>
                             </div>
-                            <div class="flex flex-wrap items-center gap-2 text-xs">
+                            <!-- <div class="flex flex-wrap items-center gap-2 text-xs">
                                 <span class="badge badge-success">Surplus (lebih)</span>
                                 <span class="badge badge-danger">Minus (kurang)</span>
                                 <span class="badge badge-neutral">Sesuai</span>
-                            </div>
+                            </div> -->
                         </div>
                     </div>
 
@@ -71,11 +71,16 @@
                                     <th class="text-right">Stok Sistem</th>
                                     <th class="text-right">Hasil SO</th>
                                     <th class="text-right">Selisih</th>
+                                    <th>Keterangan</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($items as $item)
-                                <tr x-data="{ so: {{ $item->stok_so === null ? 'null' : $item->stok_so }}, sistem: {{ $item->stok_sistem }} }">
+                                <tr x-data="{ so: {{ $item->stok_so === null ? 'null' : $item->stok_so }}, sistem: {{ $item->stok_sistem }}, wasFilled: {{ $item->stok_so !== null ? 'true' : 'false' }} }"
+                                    :class="{
+                                        'bg-emerald-50 border-l-4 border-emerald-400': isDraft && so !== null && so !== '',
+                                        'bg-red-100 border-l-4 border-red-400': isDraft && (so === null || so === '') && filledCount > 0
+                                    }">
                                     <td class="font-medium text-slate-700">{{ $item->kode_aset }}</td>
                                     <td>{{ $item->nama_aset }}</td>
                                     <td class="text-right">{{ $item->stok_bulan_lalu === null ? '—' : number_format($item->stok_bulan_lalu) }}</td>
@@ -86,6 +91,7 @@
                                             name="items[{{ $item->id }}]"
                                             value="{{ $item->stok_so }}"
                                             x-model.number="so"
+                                            @input="const filled = (so !== null && so !== ''); if (filled !== wasFilled) { wasFilled = filled; filled ? filledCount++ : filledCount-- }"
                                             :disabled="!isDesktop"
                                             class="w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-right text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-0 disabled:pointer-events-none">
                                         @else
@@ -117,6 +123,18 @@
                                             @endif
                                         @endif
                                     </td>
+                                    <td>
+                                        @if($session->isDraft())
+                                        <input type="text" maxlength="255"
+                                            name="keterangan[{{ $item->id }}]"
+                                            value="{{ $item->keterangan }}"
+                                            placeholder="contoh : tidak ditemukan"
+                                            :disabled="!isDesktop"
+                                            class="w-56 rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-0 disabled:pointer-events-none">
+                                        @else
+                                        <span class="text-slate-600">{{ $item->keterangan ?? '—' }}</span>
+                                        @endif
+                                    </td>
                                 </tr>
                                 @endforeach
                             </tbody>
@@ -126,7 +144,11 @@
                     {{-- Mobile kartu --}}
                     <div class="mobile-card-list p-4 lg:hidden">
                         @foreach($items as $item)
-                        <div class="mobile-card" x-data="{ so: {{ $item->stok_so === null ? 'null' : $item->stok_so }}, sistem: {{ $item->stok_sistem }} }">
+                        <div class="mobile-card" x-data="{ so: {{ $item->stok_so === null ? 'null' : $item->stok_so }}, sistem: {{ $item->stok_sistem }}, wasFilled: {{ $item->stok_so !== null ? 'true' : 'false' }} }"
+                            :class="{
+                                'bg-emerald-50 border-l-4 border-emerald-400': isDraft && so !== null && so !== '',
+                                'bg-red-100 border-l-4 border-red-400': isDraft && (so === null || so === '') && filledCount > 0
+                            }">
                             <div class="mobile-card-top">
                                 <span class="text-base font-semibold text-slate-800">{{ $item->nama_aset }}</span>
                                 <span class="text-xs text-slate-400">{{ $item->kode_aset }}</span>
@@ -141,6 +163,7 @@
                                         name="items[{{ $item->id }}]"
                                         value="{{ $item->stok_so }}"
                                         x-model.number="so"
+                                        @input="const filled = (so !== null && so !== ''); if (filled !== wasFilled) { wasFilled = filled; filled ? filledCount++ : filledCount-- }"
                                         :disabled="isDesktop"
                                         class="w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-right text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-0 disabled:pointer-events-none">
                                     @else
@@ -161,6 +184,21 @@
                                         @php($sel = $item->selisih)
                                         @if($sel === null)<span class="text-slate-300">—</span>
                                         @else<span class="badge {{ $sel>0?'badge-success':($sel<0?'badge-danger':'badge-neutral') }}">{{ $sel>0?'+'.$sel:$sel }}</span>@endif
+                                    @endif
+                                </span>
+                            </div>
+                            <div class="mobile-card-row">
+                                <span>Keterangan</span>
+                                <span>
+                                    @if($session->isDraft())
+                                    <input type="text" maxlength="255"
+                                        name="keterangan[{{ $item->id }}]"
+                                        value="{{ $item->keterangan }}"
+                                        placeholder="opsional..."
+                                        :disabled="isDesktop"
+                                        class="w-40 rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-0 disabled:pointer-events-none">
+                                    @else
+                                    <span class="text-slate-600">{{ $item->keterangan ?? '—' }}</span>
                                     @endif
                                 </span>
                             </div>
@@ -223,10 +261,16 @@
             });
         }
 
-        function soForm(isDraft) {
+        function soForm(isDraft, initialFilledCount) {
             return {
                 isDraft,
                 isDesktop: window.matchMedia('(min-width: 1024px)').matches,
+                // Jumlah barang yang Hasil SO-nya sudah diisi (client-side, live).
+                // Dipakai tiap baris (lewat merge scope Alpine) untuk nentuin
+                // kapan baris kosong mulai ditandai merah — SENGAJA baru
+                // muncul warnanya begitu ada minimal 1 barang yang keisi,
+                // bukan langsung merah semua pas SO baru dibuka.
+                filledCount: initialFilledCount,
                 init() {
                     const mq = window.matchMedia('(min-width: 1024px)');
                     const sync = (e) => { this.isDesktop = e.matches; };
@@ -267,7 +311,7 @@
                         const fin = document.getElementById('finalizeForm');
                         const catatanEl = document.getElementById('catatan');
 
-                        main.querySelectorAll('input[name^="items"]:not(:disabled)').forEach((el) => {
+                        main.querySelectorAll('input[name^="items"]:not(:disabled), input[name^="keterangan"]:not(:disabled)').forEach((el) => {
                             const clone = document.createElement('input');
                             clone.type = 'hidden';
                             clone.name = el.name;
